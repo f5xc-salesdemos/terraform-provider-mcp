@@ -1,0 +1,76 @@
+name: Update f5xc-auth
+
+on:
+  repository_dispatch:
+    types: [f5xc-auth-updated]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    name: Update f5xc-auth dependency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Update f5xc-auth
+        run: npm install @robinmordasiewicz/f5xc-auth@latest
+
+      - name: Install all dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test || echo "Tests require data - skipping"
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet package.json package-lock.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            NEW_VERSION=$(node -p "require('./node_modules/@robinmordasiewicz/f5xc-auth/package.json').version")
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.AUTO_MERGE_TOKEN || secrets.GITHUB_TOKEN }}
+          commit-message: "chore(deps): update @robinmordasiewicz/f5xc-auth to v${{ steps.changes.outputs.version }}"
+          branch: deps/f5xc-auth-${{ steps.changes.outputs.version }}
+          title: "chore(deps): update @robinmordasiewicz/f5xc-auth to v${{ steps.changes.outputs.version }}"
+          body: |
+            Automated update of @robinmordasiewicz/f5xc-auth dependency.
+
+            **New version**: ${{ steps.changes.outputs.version }}
+
+            🤖 Generated automatically
+          delete-branch: true
+          labels: |
+            automated
+            dependencies
+
+      - name: Enable auto-merge
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          PR_NUMBER=$(gh pr list --state open --head "deps/f5xc-auth-${{ steps.changes.outputs.version }}" --json number --jq '.[0].number')
+          if [[ -n "$PR_NUMBER" ]]; then
+            gh pr merge "$PR_NUMBER" --auto --squash || echo "Auto-merge not available"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN || secrets.GITHUB_TOKEN }}

@@ -1,0 +1,209 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - "LICENSE"
+      - ".github/**"
+      - ".checkov.yaml"
+      - ".editorconfig"
+      - ".editorconfig-checker.json"
+      - ".gitignore"
+      - ".jscpd.json"
+      - ".markdownlint.json"
+      - ".pre-commit-config.yaml"
+      - ".shellcheckrc"
+      - ".textlintrc"
+      - ".yamllint.yaml"
+      - "zizmor.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      created: ${{ steps.tag.outputs.created }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.AUTO_MERGE_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Calculate version
+        id: version
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          VERSION=${LATEST_TAG#v}
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          MINOR=$(echo $VERSION | cut -d. -f2)
+          PATCH=$(echo $VERSION | cut -d. -f3)
+
+          COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
+
+          if echo "$COMMITS" | grep -qE "^BREAKING CHANGE:|^[a-z]+!:"; then
+            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+          elif echo "$COMMITS" | grep -qE "^feat(\(.+\))?:"; then
+            MINOR=$((MINOR + 1)); PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "version=${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_OUTPUT
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "Version: $NEW_TAG"
+
+      - name: Check if tag exists
+        id: check
+        run: |
+          if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download MCP data
+        if: steps.check.outputs.exists == 'false'
+        run: node scripts/download-data.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        if: steps.check.outputs.exists == 'false'
+        run: npm run build:ts
+
+      - name: Test
+        if: steps.check.outputs.exists == 'false'
+        run: npm test
+
+      - name: Update version
+        if: steps.check.outputs.exists == 'false'
+        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version
+
+      - name: Create and push tag
+        id: tag
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+          echo "created=true" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        if: steps.tag.outputs.created == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm
+        if: steps.tag.outputs.created == 'true'
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Build MCPB Bundle
+        if: steps.tag.outputs.created == 'true'
+        run: ./scripts/build-mcpb.sh --version "${{ steps.version.outputs.version }}"
+
+      - name: Upload MCPB to Release
+        if: steps.tag.outputs.created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release upload "${{ steps.version.outputs.tag }}" \
+            "build/f5xc-terraform-mcp-${VERSION}.mcpb" \
+            "build/f5xc-terraform-mcp-${VERSION}.mcpb.sha256" \
+            --clobber
+
+      - name: Update server.json and manifest.json
+        if: steps.tag.outputs.created == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SHA256=$(cat "build/f5xc-terraform-mcp-${VERSION}.mcpb.sha256")
+
+          node -e "
+          const fs = require('fs');
+          const serverJson = JSON.parse(fs.readFileSync('server.json', 'utf8'));
+          serverJson.version = '$VERSION';
+          if (serverJson.packages) {
+            serverJson.packages.forEach(p => {
+              p.version = '$VERSION';
+              if (p.registryType === 'mcpb') {
+                p.identifier = 'https://github.com/f5xc-salesdemos/terraform-provider-mcp/releases/download/v$VERSION/f5xc-terraform-mcp-$VERSION.mcpb';
+                p.fileSha256 = '$SHA256';
+              }
+            });
+          }
+          fs.writeFileSync('server.json', JSON.stringify(serverJson, null, 2) + '\n');
+          "
+
+          node -e "
+          const fs = require('fs');
+          const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+          manifest.version = '$VERSION';
+          fs.writeFileSync('manifest.json', JSON.stringify(manifest, null, 2) + '\n');
+          "
+
+      - name: Install mcp-publisher CLI
+        if: steps.tag.outputs.created == 'true'
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz
+          sudo mv mcp-publisher /usr/local/bin/
+          mcp-publisher --version
+
+      - name: Authenticate via GitHub OIDC
+        if: steps.tag.outputs.created == 'true'
+        run: mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        if: steps.tag.outputs.created == 'true'
+        run: mcp-publisher publish --file server.json
+
+      - name: Create PR for version files
+        if: steps.tag.outputs.created == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.AUTO_MERGE_TOKEN || secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update server.json to v${{ steps.version.outputs.version }}"
+          branch: chore/version-${{ steps.version.outputs.version }}
+          title: "chore: update server.json to v${{ steps.version.outputs.version }}"
+          body: |
+            Automated update of server.json and manifest.json for v${{ steps.version.outputs.version }}.
+
+            🤖 Generated with [Claude Code](https://claude.com/claude-code)
+          labels: automated
+          delete-branch: true
+          add-paths: |
+            server.json
+            manifest.json

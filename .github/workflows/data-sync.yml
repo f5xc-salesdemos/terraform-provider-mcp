@@ -1,0 +1,156 @@
+name: Provider Data Sync
+
+on:
+  repository_dispatch:
+    types: [provider-release]
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      provider_version:
+        description: "Provider version to sync (e.g., 3.25.0). Leave empty for latest."
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Sync Provider Data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Close existing data-sync PRs
+        run: |
+          EXISTING_PRS=$(gh pr list --state open --head "data-sync/" --json number --jq '.[].number' || true)
+          for PR in $EXISTING_PRS; do
+            echo "Closing existing PR #$PR"
+            gh pr close "$PR" --comment "Superseded by newer data sync" || true
+          done
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            VERSION="${{ github.event.client_payload.version }}"
+            VERSION="${VERSION#v}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Using dispatch version: $VERSION"
+          elif [[ -n "${{ github.event.inputs.provider_version }}" ]]; then
+            VERSION="${{ github.event.inputs.provider_version }}"
+            VERSION="${VERSION#v}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Using manual version: $VERSION"
+          else
+            echo "version=" >> $GITHUB_OUTPUT
+            echo "Using latest release"
+          fi
+
+      - name: Download MCP data
+        run: |
+          ARGS=""
+          if [[ -n "${{ steps.version.outputs.version }}" ]]; then
+            ARGS="--version ${{ steps.version.outputs.version }}"
+          fi
+          node scripts/download-data.js $ARGS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and test
+        run: |
+          npm run build:ts
+          npm test
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No data changes detected"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Data changes detected"
+            git diff --cached --stat
+          fi
+
+      - name: Get data version
+        id: data-version
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          if [[ -n "${{ steps.version.outputs.version }}" ]]; then
+            echo "label=${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "label=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.AUTO_MERGE_TOKEN || secrets.GITHUB_TOKEN }}
+          commit-message: "feat(data): update provider data to v${{ steps.data-version.outputs.label }}"
+          branch: data-sync/v${{ steps.data-version.outputs.label }}
+          title: "feat(data): update provider data to v${{ steps.data-version.outputs.label }}"
+          body: |
+            ## Provider Data Update
+
+            Updated documentation, OpenAPI specs, and metadata from terraform-provider-f5xc.
+
+            **Source**: ${{ github.event.client_payload.repository || 'f5xc-salesdemos/terraform-provider-f5xc' }}
+            **Version**: ${{ steps.data-version.outputs.label }}
+            **Trigger**: ${{ github.event_name }}
+
+            ### Validation
+            - [x] TypeScript compilation
+            - [x] Unit tests passing
+
+            🤖 Generated automatically by Provider Data Sync workflow
+          delete-branch: true
+          labels: |
+            automated
+            data-sync
+
+      - name: Enable auto-merge
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          PR_NUMBER=$(gh pr list --state open --head "data-sync/v${{ steps.data-version.outputs.label }}" --json number --jq '.[0].number')
+          if [[ -n "$PR_NUMBER" ]]; then
+            gh pr merge "$PR_NUMBER" --auto --squash || echo "Auto-merge not available"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          {
+            echo "## Provider Data Sync Summary"
+            echo ""
+            if [[ "${{ steps.changes.outputs.changed }}" == "true" ]]; then
+              echo "Data updated and PR created"
+              echo "Version: ${{ steps.data-version.outputs.label }}"
+            else
+              echo "No changes detected (data is up to date)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

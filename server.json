@@ -1,0 +1,32 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.f5xc-salesdemos/terraform-provider-mcp",
+  "title": "F5 Distributed Cloud Terraform Provider",
+  "description": "F5 Distributed Cloud Terraform provider docs, 270+ OpenAPI specs, and subscription info for AI.",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@f5xc-salesdemos/terraform-provider-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeHint": "npx"
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/f5xc-salesdemos/terraform-provider-mcp/releases/download/v1.0.0/f5xc-terraform-mcp-1.0.0.mcpb",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "fileSha256": ""
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/f5xc-salesdemos/terraform-provider-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/f5xc-salesdemos/terraform-provider-mcp#readme"
+}
