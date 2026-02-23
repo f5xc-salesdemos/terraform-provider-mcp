@@ -1,17 +1,107 @@
-# Dependencies
-node_modules/
-
-# Build output
-dist/
-build/
-
-# IDE
-.vscode/
-.idea/
-
 # OS
 .DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+dist/
+*.tgz
+
+# Environment
+.env
+.env.*
 
 # Logs
 *.log
-npm-debug.log*
+
+# Astro
+.astro/
+site/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.dylib
+*.test
+*.out
+vendor/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Test coverage
+.coverage
+htmlcov/
+coverage/
+
+# Build artifacts
+reports/
+
+# Projects
+projects/
+
+# Tool-specific
+.claude/
+.playwright-mcp/
+.serena/
+.auto-claude/
+claudedocs/
+cache/
+src/generated/
+out/
+
+# Documentation build artifacts
+docs/_data/
+
+# API spec pipeline
+specs/
+docs/specifications/api/
+docs/api-reference/
+.version
+.etag
+.github_release
