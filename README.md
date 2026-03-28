@@ -1,10 +1,10 @@
-# Terraform Provider Mcp
+# Terraform Provider MCP
 
 [![GitHub Pages Deploy](https://github.com/f5xc-salesdemos/terraform-provider-mcp/actions/workflows/github-pages-deploy.yml/badge.svg)](https://github.com/f5xc-salesdemos/terraform-provider-mcp/actions/workflows/github-pages-deploy.yml)
 [![Repository Settings](https://github.com/f5xc-salesdemos/terraform-provider-mcp/actions/workflows/enforce-repo-settings.yml/badge.svg)](https://github.com/f5xc-salesdemos/terraform-provider-mcp/actions/workflows/enforce-repo-settings.yml)
 [![License](https://img.shields.io/github/license/f5xc-salesdemos/terraform-provider-mcp)](LICENSE)
 
-MCP server for F5 Distributed Cloud Terraform provider
+MCP server exposing Terraform provider schemas
 
 ## Documentation
 
