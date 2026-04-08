@@ -127,7 +127,7 @@ function buildHeaders(accept) {
 
   const token = process.env.GITHUB_TOKEN;
   if (token) {
-    headers["Authorization"] = `token ${token}`;
+    headers.Authorization = `token ${token}`;
   }
 
   return headers;
