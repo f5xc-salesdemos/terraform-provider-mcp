@@ -107,6 +107,7 @@ function exec(command: string, options: { cwd?: string; silent?: boolean } = {})
     return result || '';
   } catch (error) {
     if (error instanceof Error && 'stdout' in error) {
+      // biome-ignore lint/suspicious/noExplicitAny: error type from execSync
       return (error as any).stdout || '';
     }
     throw error;

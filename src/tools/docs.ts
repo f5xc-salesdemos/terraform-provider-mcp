@@ -174,7 +174,9 @@ function handleList(input: DocsInput, format: ResponseFormat): string {
     if (!byType.has(t)) {
       byType.set(t, []);
     }
-    byType.get(t)!.push(doc);
+    const typeList = byType.get(t) ?? [];
+    typeList.push(doc);
+    byType.set(t, typeList);
   }
 
   for (const [docType, typeDocs] of byType) {

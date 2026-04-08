@@ -27,21 +27,21 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Parse arguments
 VERSION=""
 while [[ $# -gt 0 ]]; do
-    case $1 in
-        --version)
-            VERSION="$2"
-            shift 2
-            ;;
-        *)
-            echo -e "${RED}Unknown option: $1${NC}"
-            exit 1
-            ;;
-    esac
+  case $1 in
+  --version)
+    VERSION="$2"
+    shift 2
+    ;;
+  *)
+    echo -e "${RED}Unknown option: $1${NC}"
+    exit 1
+    ;;
+  esac
 done
 
 # Get version from package.json if not specified
 if [[ -z "$VERSION" ]]; then
-    VERSION=$(node -p "require('$PROJECT_ROOT/package.json').version")
+  VERSION=$(node -p "require('$PROJECT_ROOT/package.json').version")
 fi
 
 echo -e "${GREEN}Building MCPB bundle v${VERSION}${NC}"
@@ -80,23 +80,23 @@ cp "$PROJECT_ROOT/manifest.json" "$BUNDLE_DIR/"
 # Copy documentation files from dist/ (populated by download-data.js)
 echo -e "${YELLOW}Copying documentation files...${NC}"
 if [[ -d "$PROJECT_ROOT/dist/docs" ]]; then
-    cp -r "$PROJECT_ROOT/dist/docs" "$BUNDLE_DIR/docs"
-    echo -e "${GREEN}Copied docs from dist/docs${NC}"
+  cp -r "$PROJECT_ROOT/dist/docs" "$BUNDLE_DIR/docs"
+  echo -e "${GREEN}Copied docs from dist/docs${NC}"
 else
-    echo -e "${YELLOW}Warning: dist/docs not found - run 'npm run build:docs' first${NC}"
-    mkdir -p "$BUNDLE_DIR/docs"
+  echo -e "${YELLOW}Warning: dist/docs not found - run 'npm run build:docs' first${NC}"
+  mkdir -p "$BUNDLE_DIR/docs"
 fi
 
 # Copy metadata files from dist/ (populated by download-data.js)
 if [[ -d "$PROJECT_ROOT/dist/metadata" ]]; then
-    cp -r "$PROJECT_ROOT/dist/metadata" "$BUNDLE_DIR/metadata"
-    echo -e "${GREEN}Copied metadata from dist/metadata${NC}"
+  cp -r "$PROJECT_ROOT/dist/metadata" "$BUNDLE_DIR/metadata"
+  echo -e "${GREEN}Copied metadata from dist/metadata${NC}"
 fi
 
 # Copy subscription tiers from dist/
 if [[ -f "$PROJECT_ROOT/dist/subscription-tiers.json" ]]; then
-    cp "$PROJECT_ROOT/dist/subscription-tiers.json" "$BUNDLE_DIR/"
-    echo -e "${GREEN}Copied subscription-tiers.json${NC}"
+  cp "$PROJECT_ROOT/dist/subscription-tiers.json" "$BUNDLE_DIR/"
+  echo -e "${GREEN}Copied subscription-tiers.json${NC}"
 fi
 
 # Update version in manifest
@@ -118,10 +118,10 @@ zip -r "$OUTPUT_FILE" . -x "*.DS_Store" -x "*__MACOSX*"
 # Calculate SHA-256 hash
 echo -e "${YELLOW}Calculating SHA-256 hash...${NC}"
 HASH=$(shasum -a 256 "$OUTPUT_FILE" | cut -d' ' -f1)
-echo "$HASH" > "$OUTPUT_FILE.sha256"
+echo "$HASH" >"$OUTPUT_FILE.sha256"
 
 # Calculate bundle size
-SIZE=$(ls -lh "$OUTPUT_FILE" | awk '{print $5}')
+SIZE=$(du -h "$OUTPUT_FILE" | cut -f1)
 
 # Clean up intermediate directory
 rm -rf "$BUNDLE_DIR"

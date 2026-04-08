@@ -104,7 +104,7 @@ describe('MCP Server Determinism Validation', () => {
         expect(typeof oneOfGroups).toBe('object');
 
         // Each group should have a fields array
-        for (const [groupName, groupData] of Object.entries(oneOfGroups)) {
+        for (const [_groupName, groupData] of Object.entries(oneOfGroups)) {
           expect(groupData).toHaveProperty('fields');
           expect(Array.isArray(groupData.fields)).toBe(true);
           // Each group should have at least 2 mutually exclusive options

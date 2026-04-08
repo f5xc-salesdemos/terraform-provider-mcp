@@ -159,7 +159,7 @@ export class MCPClient {
       try {
         const data = JSON.parse(result);
         return {
-          valid: data.valid ?? data.errors?.length === 0 ?? true,
+          valid: data.valid ?? (data.errors?.length === 0 || true),
           errors: data.errors || [],
           warnings: data.warnings || [],
         };

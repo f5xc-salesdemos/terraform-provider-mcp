@@ -31,27 +31,27 @@ SKIP_BUILD=false
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --verbose|-v)
-      VERBOSE=true
-      shift
-      ;;
-    --skip-build)
-      SKIP_BUILD=true
-      shift
-      ;;
-    --help|-h)
-      echo "Usage: $0 [--verbose] [--skip-build]"
-      echo ""
-      echo "Options:"
-      echo "  --verbose, -v    Show detailed test output"
-      echo "  --skip-build     Skip npm build step"
-      echo "  --help, -h       Show this help message"
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1"
-      exit 1
-      ;;
+  --verbose | -v)
+    VERBOSE=true
+    shift
+    ;;
+  --skip-build)
+    SKIP_BUILD=true
+    shift
+    ;;
+  --help | -h)
+    echo "Usage: $0 [--verbose] [--skip-build]"
+    echo ""
+    echo "Options:"
+    echo "  --verbose, -v    Show detailed test output"
+    echo "  --skip-build     Skip npm build step"
+    echo "  --help, -h       Show this help message"
+    exit 0
+    ;;
+  *)
+    echo "Unknown option: $1"
+    exit 1
+    ;;
   esac
 done
 
@@ -76,7 +76,7 @@ check_prerequisites() {
   log_info "Checking prerequisites..."
 
   # Check Node.js
-  if ! command -v node &> /dev/null; then
+  if ! command -v node &>/dev/null; then
     log_error "Node.js is not installed"
     exit 1
   fi
@@ -88,14 +88,14 @@ check_prerequisites() {
   log_success "Node.js $(node --version)"
 
   # Check npm
-  if ! command -v npm &> /dev/null; then
+  if ! command -v npm &>/dev/null; then
     log_error "npm is not installed"
     exit 1
   fi
   log_success "npm $(npm --version)"
 
   # Check Terraform
-  if ! command -v terraform &> /dev/null; then
+  if ! command -v terraform &>/dev/null; then
     log_warn "Terraform CLI not installed - some tests will be skipped"
   else
     log_success "Terraform $(terraform version -json | jq -r '.terraform_version')"

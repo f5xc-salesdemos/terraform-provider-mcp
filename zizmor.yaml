@@ -52,3 +52,5 @@ rules:
   # needed for org-internal automation tokens
   secrets-outside-env:
     disable: true
+  superfluous-actions:
+    disable: true

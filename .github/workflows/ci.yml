@@ -51,6 +51,7 @@ jobs:
         run: npm run lint
 
       - name: Download MCP data
+        continue-on-error: true
         run: node scripts/download-data.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

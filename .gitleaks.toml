@@ -1,0 +1,4 @@
+[allowlist]
+  description = "Allowlist for terraform resource type names"
+  regexTarget = "match"
+  regexes = ['''api_definition[s]?''']

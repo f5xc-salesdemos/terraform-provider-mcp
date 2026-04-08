@@ -13,10 +13,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   CredentialManager,
   AuthMode,
-  getProfileManager,
 } from '@robinmordasiewicz/f5xc-auth';
 import {
-  clearF5XCEnvVars,
   setupDocumentationModeEnv,
   setupAuthenticatedModeEnv,
 } from '../utils/ci-environment.js';
@@ -431,6 +429,7 @@ describe('Auth Tool Acceptance Tests', () => {
     it('should throw for unknown operation', async () => {
       await expect(
         handleAuth({
+          // biome-ignore lint/suspicious/noExplicitAny: testing invalid input
           operation: 'unknown' as any,
           response_format: ResponseFormat.JSON,
         })

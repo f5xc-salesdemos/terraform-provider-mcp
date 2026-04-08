@@ -59,7 +59,6 @@ import {
   AddonSchema,
   MetadataSchema,
   AuthSchema,
-  ResponseFormatSchema,
   type DiscoverInput,
   type DocsInput,
   type ApiInput,

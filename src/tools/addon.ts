@@ -91,7 +91,9 @@ function handleList(input: AddonInput, format: ResponseFormat): string {
     if (!byCategory.has(cat)) {
       byCategory.set(cat, []);
     }
-    byCategory.get(cat)!.push(service);
+    const catList = byCategory.get(cat) ?? [];
+    catList.push(service);
+    byCategory.set(cat, catList);
   }
 
   for (const [category, services] of byCategory) {

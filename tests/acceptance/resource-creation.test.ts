@@ -80,7 +80,7 @@ describe('MCP Server Resource Creation E2E Tests', () => {
 
   describe('Scenario 1: Namespace Creation', { timeout: TEST_TIMEOUT }, () => {
     let terraform: TerraformRunner;
-    const resourceName = 'namespace-test';
+    const _resourceName = 'namespace-test';
 
     beforeEach(() => {
       if (skipTests) return;
@@ -159,7 +159,7 @@ resource "f5xc_namespace" "test" {
       terraform.writeProviderConfig(credentials.apiUrl);
 
       // 2. Get syntax guidance from MCP for origin_pool
-      const syntaxGuidance = await mcpClient.getSyntax('origin_pool');
+      const _syntaxGuidance = await mcpClient.getSyntax('origin_pool');
       console.log('MCP Syntax Guidance received');
 
       // 3. Get OneOf groups to understand mutual exclusivity
@@ -266,7 +266,7 @@ resource "f5xc_origin_pool" "httpbin" {
       terraform.writeProviderConfig(credentials.apiUrl);
 
       // 2. Get dependencies from MCP
-      const dependencies = await mcpClient.getDependencies('http_loadbalancer');
+      const _dependencies = await mcpClient.getDependencies('http_loadbalancer');
       console.log('MCP Dependencies guidance received');
 
       // 3. Get MCP-generated examples as reference for correct syntax
@@ -397,7 +397,7 @@ resource "f5xc_http_loadbalancer" "test" {
       terraform.writeProviderConfig(credentials.apiUrl);
 
       // 2. Get common mistakes to avoid from MCP
-      const mistakes = await mcpClient.getCommonMistakes('http_loadbalancer');
+      const _mistakes = await mcpClient.getCommonMistakes('http_loadbalancer');
       console.log('MCP Common Mistakes guidance received');
 
       // 3. Generate security-enabled configuration
