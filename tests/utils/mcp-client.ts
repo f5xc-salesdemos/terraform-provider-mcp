@@ -108,8 +108,7 @@ export class MCPClient {
         // If there's a patterns array, get the first match
         if (data.patterns && Array.isArray(data.patterns)) {
           const matchingPattern = data.patterns.find(
-            (p: { name: string; terraform?: string; code?: string }) =>
-              !pattern || p.name === pattern,
+            (p: { name: string; terraform?: string; code?: string }) => !pattern || p.name === pattern,
           );
           if (matchingPattern) {
             return matchingPattern.terraform || matchingPattern.code || '';
@@ -169,8 +168,7 @@ export class MCPClient {
     }
 
     // For markdown, check for error indicators
-    const hasErrors = result.toLowerCase().includes('error') ||
-                      result.toLowerCase().includes('invalid');
+    const hasErrors = result.toLowerCase().includes('error') || result.toLowerCase().includes('invalid');
     return {
       valid: !hasErrors,
       errors: hasErrors ? [{ type: 'unknown', field: 'unknown', message: result }] : [],
@@ -279,8 +277,7 @@ export class MCPClient {
     const codeBlockRegex = /```(?:hcl|terraform|tf)?\n([\s\S]*?)```/g;
     const matches: string[] = [];
 
-    let match;
-    while ((match = codeBlockRegex.exec(markdown)) !== null) {
+    for (let match = codeBlockRegex.exec(markdown); match !== null; match = codeBlockRegex.exec(markdown)) {
       matches.push(match[1].trim());
     }
 
@@ -296,10 +293,7 @@ export class MCPClient {
    * Generate a complete Terraform configuration for testing
    * Combines provider config with resource config
    */
-  generateCompleteConfig(
-    apiUrl: string,
-    resourceConfig: string,
-  ): string {
+  generateCompleteConfig(apiUrl: string, resourceConfig: string): string {
     const providerBlock = `
 terraform {
   required_providers {
@@ -315,7 +309,7 @@ provider "f5xc" {
   # Token is read from F5XC_API_TOKEN environment variable
 }
 `;
-    return providerBlock + '\n' + resourceConfig;
+    return `${providerBlock}\n${resourceConfig}`;
   }
 
   /**

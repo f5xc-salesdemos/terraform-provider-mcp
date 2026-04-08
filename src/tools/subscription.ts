@@ -8,7 +8,7 @@
  * Tool: f5xc_terraform_subscription
  */
 
-import { SubscriptionInput } from '../schemas/common.js';
+import type { SubscriptionInput } from '../schemas/common.js';
 import { ResponseFormat } from '../types.js';
 import {
   getResourceSubscriptionInfo,

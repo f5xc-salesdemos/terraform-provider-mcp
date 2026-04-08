@@ -7,9 +7,9 @@
  * This includes danger levels, side effects, response times, and best practices.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import {
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import type {
   OperationsMetadataCollection,
   ResourceOperationInfo,
   OperationMetadata,
@@ -180,9 +180,7 @@ export class OperationsService {
 
     if (!this.operationsMetadata) return results;
 
-    for (const [resourceName, resourceOps] of Object.entries(
-      this.operationsMetadata.resources,
-    )) {
+    for (const [resourceName, resourceOps] of Object.entries(this.operationsMetadata.resources)) {
       for (const [opName, opMeta] of Object.entries(resourceOps.operations)) {
         if (opMeta.danger_level === 'high' || opMeta.danger_level === 'critical') {
           results.push({
@@ -212,9 +210,7 @@ export class OperationsService {
 
     if (!this.operationsMetadata) return results;
 
-    for (const [resourceName, resourceOps] of Object.entries(
-      this.operationsMetadata.resources,
-    )) {
+    for (const [resourceName, resourceOps] of Object.entries(this.operationsMetadata.resources)) {
       for (const [opName, opMeta] of Object.entries(resourceOps.operations)) {
         if (opMeta.confirmation_required) {
           results.push({
@@ -263,8 +259,7 @@ export class OperationsService {
       for (const opMeta of Object.values(resourceOps.operations)) {
         summary.totalOperations++;
         if (opMeta.danger_level) {
-          summary.byDangerLevel[opMeta.danger_level] =
-            (summary.byDangerLevel[opMeta.danger_level] || 0) + 1;
+          summary.byDangerLevel[opMeta.danger_level] = (summary.byDangerLevel[opMeta.danger_level] || 0) + 1;
         }
         if (opMeta.confirmation_required) {
           summary.confirmationRequired++;

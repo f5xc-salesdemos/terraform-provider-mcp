@@ -5,9 +5,9 @@
  * Loads and manages Terraform provider documentation
  */
 
-import { readFileSync, existsSync, readdirSync } from 'fs';
-import { join, dirname, basename, extname as _extname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { join, dirname, basename } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { ResourceDoc, SearchResult, SubscriptionMetadata, SubscriptionTier } from '../types.js';
 
 // Get the package root directory
@@ -55,7 +55,9 @@ function loadSubscriptionMetadata(): SubscriptionMetadata | null {
 /**
  * Find resource metadata with name transformations
  */
-function findResourceMetadata(resourceName: string): { tier: SubscriptionTier; service: string; advancedFeatures?: string[] } | null {
+function findResourceMetadata(
+  resourceName: string,
+): { tier: SubscriptionTier; service: string; advancedFeatures?: string[] } | null {
   const metadata = loadSubscriptionMetadata();
   if (!metadata) {
     return null;
@@ -143,7 +145,7 @@ function matchesAdvancedFeature(propertyName: string, featureName: string): bool
  */
 function _isAdvancedFeatureProperty(resourceName: string, propertyName: string): boolean {
   const resourceMeta = findResourceMetadata(resourceName);
-  if (!resourceMeta || !resourceMeta.advancedFeatures || resourceMeta.advancedFeatures.length === 0) {
+  if (!resourceMeta?.advancedFeatures || resourceMeta.advancedFeatures.length === 0) {
     return false;
   }
 
@@ -163,7 +165,10 @@ function _isAdvancedFeatureProperty(resourceName: string, propertyName: string):
  * @param propertyName - The property name (e.g., "enable_malicious_user_detection")
  * @returns Subscription info for the property, or null if resource not found
  */
-export function getPropertySubscriptionInfo(resourceName: string, propertyName: string): {
+export function getPropertySubscriptionInfo(
+  resourceName: string,
+  propertyName: string,
+): {
   resourceName: string;
   propertyName: string;
   requiresAdvanced: boolean;
@@ -269,7 +274,7 @@ export function loadAllDocumentation(): ResourceDoc[] {
 
   // Load resources (enriched with subscription tier info)
   if (existsSync(DOCS_PATHS.resources)) {
-    const files = readdirSync(DOCS_PATHS.resources).filter(f => f.endsWith('.md'));
+    const files = readdirSync(DOCS_PATHS.resources).filter((f) => f.endsWith('.md'));
     for (const file of files) {
       const doc: ResourceDoc = {
         name: basename(file, '.md'),
@@ -282,7 +287,7 @@ export function loadAllDocumentation(): ResourceDoc[] {
 
   // Load data sources (enriched with subscription tier info)
   if (existsSync(DOCS_PATHS.dataSources)) {
-    const files = readdirSync(DOCS_PATHS.dataSources).filter(f => f.endsWith('.md'));
+    const files = readdirSync(DOCS_PATHS.dataSources).filter((f) => f.endsWith('.md'));
     for (const file of files) {
       const doc: ResourceDoc = {
         name: basename(file, '.md'),
@@ -295,7 +300,7 @@ export function loadAllDocumentation(): ResourceDoc[] {
 
   // Load functions
   if (existsSync(DOCS_PATHS.functions)) {
-    const files = readdirSync(DOCS_PATHS.functions).filter(f => f.endsWith('.md'));
+    const files = readdirSync(DOCS_PATHS.functions).filter((f) => f.endsWith('.md'));
     for (const file of files) {
       allDocs.push({
         name: basename(file, '.md'),
@@ -307,7 +312,7 @@ export function loadAllDocumentation(): ResourceDoc[] {
 
   // Load guides
   if (existsSync(DOCS_PATHS.guides)) {
-    const files = readdirSync(DOCS_PATHS.guides).filter(f => f.endsWith('.md'));
+    const files = readdirSync(DOCS_PATHS.guides).filter((f) => f.endsWith('.md'));
     for (const file of files) {
       allDocs.push({
         name: basename(file, '.md'),
@@ -336,11 +341,11 @@ export function getDocumentation(name: string, type?: string): ResourceDoc | nul
   const cacheKey = `${type || 'any'}:${name}`;
 
   if (docsCache.has(cacheKey)) {
-    return docsCache.get(cacheKey)!;
+    return docsCache.get(cacheKey) ?? null;
   }
 
   const docs = loadAllDocumentation();
-  let doc = docs.find(d => {
+  let doc = docs.find((d) => {
     const nameMatch = d.name === name || d.name === name.replace(/_/g, '-') || d.name === name.replace(/-/g, '_');
     const typeMatch = !type || d.type === type;
     return nameMatch && typeMatch;
@@ -362,7 +367,7 @@ export function getDocumentation(name: string, type?: string): ResourceDoc | nul
 export function listDocumentation(type?: string): ResourceDoc[] {
   const docs = loadAllDocumentation();
   if (type) {
-    return docs.filter(d => d.type === type);
+    return docs.filter((d) => d.type === type);
   }
   return docs;
 }
@@ -374,7 +379,7 @@ export function searchDocumentation(query: string, type?: string, limit: number 
   const docs = loadAllDocumentation();
   const results: SearchResult[] = [];
   const queryLower = query.toLowerCase();
-  const queryTerms = queryLower.split(/\s+/).filter(t => t.length > 0);
+  const queryTerms = queryLower.split(/\s+/).filter((t) => t.length > 0);
 
   for (const doc of docs) {
     if (type && doc.type !== type) {
@@ -459,8 +464,8 @@ function extractSnippet(content: string, terms: string[], maxLength: number = 20
 
   if (firstIndex === content.length) {
     // No term found, return beginning of content
-    const lines = content.split('\n').filter(l => l.trim().length > 0);
-    return lines.slice(0, 3).join(' ').slice(0, maxLength) + '...';
+    const lines = content.split('\n').filter((l) => l.trim().length > 0);
+    return `${lines.slice(0, 3).join(' ').slice(0, maxLength)}...`;
   }
 
   // Extract snippet around the term
@@ -472,10 +477,10 @@ function extractSnippet(content: string, terms: string[], maxLength: number = 20
   snippet = snippet.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
 
   if (start > 0) {
-    snippet = '...' + snippet;
+    snippet = `...${snippet}`;
   }
   if (end < content.length) {
-    snippet = snippet + '...';
+    snippet = `${snippet}...`;
   }
 
   return snippet;
@@ -522,7 +527,7 @@ export function getResourceSubscriptionInfo(resourceName: string): {
  */
 export function getAdvancedTierResources(): ResourceDoc[] {
   const docs = loadAllDocumentation();
-  return docs.filter(doc => {
+  return docs.filter((doc) => {
     if (doc.type !== 'resource' && doc.type !== 'data-source') {
       return false;
     }
@@ -548,16 +553,18 @@ export function getSubscriptionSummary(): {
   advancedFeaturesList: string[];
 } {
   const docs = loadAllDocumentation();
-  const resourceDocs = docs.filter(d => d.type === 'resource' || d.type === 'data-source');
+  const resourceDocs = docs.filter((d) => d.type === 'resource' || d.type === 'data-source');
 
-  const advancedOnly = resourceDocs.filter(d => d.subscriptionTier === 'ADVANCED');
-  const withAdvancedFeatures = resourceDocs.filter(d => d.advancedFeatures && d.advancedFeatures.length > 0);
+  const advancedOnly = resourceDocs.filter((d) => d.subscriptionTier === 'ADVANCED');
+  const withAdvancedFeatures = resourceDocs.filter((d) => d.advancedFeatures && d.advancedFeatures.length > 0);
 
   // Collect all unique advanced features
   const allFeatures = new Set<string>();
   for (const doc of resourceDocs) {
     if (doc.advancedFeatures) {
-      doc.advancedFeatures.forEach(f => allFeatures.add(f));
+      for (const f of doc.advancedFeatures) {
+        allFeatures.add(f);
+      }
     }
   }
 

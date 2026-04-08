@@ -18,15 +18,9 @@ import {
   E2E_SKIP_MESSAGE,
   TERRAFORM_SKIP_MESSAGE,
 } from '../utils/ci-environment.js';
-import {
-  TerraformRunner,
-  isTerraformAvailable,
-} from '../utils/terraform-runner.js';
-import { MCPClient, createMCPClient } from '../utils/mcp-client.js';
-import {
-  ResourceValidator,
-  createResourceValidator,
-} from '../utils/resource-validator.js';
+import { TerraformRunner, isTerraformAvailable } from '../utils/terraform-runner.js';
+import { type MCPClient, createMCPClient } from '../utils/mcp-client.js';
+import { type ResourceValidator, createResourceValidator } from '../utils/resource-validator.js';
 import { ResponseFormat } from '../../src/types.js';
 
 // Test configuration

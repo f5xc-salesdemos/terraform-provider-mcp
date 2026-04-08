@@ -13,9 +13,9 @@
  * - Attribute metadata (types, requirements)
  */
 
-import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Get paths
 const __filename = fileURLToPath(import.meta.url);
@@ -23,9 +23,7 @@ const __dirname = dirname(__filename);
 
 const PACKAGE_ROOT = join(__dirname, '..', '..');
 const DATA_DIR = process.env.MCP_DATA_DIR;
-const BUNDLED_METADATA = DATA_DIR
-  ? join(DATA_DIR, 'metadata')
-  : join(PACKAGE_ROOT, 'dist', 'metadata');
+const BUNDLED_METADATA = DATA_DIR ? join(DATA_DIR, 'metadata') : join(PACKAGE_ROOT, 'dist', 'metadata');
 
 // =============================================================================
 // TYPES
@@ -552,10 +550,7 @@ export interface ResourceSyntaxGuide {
 /**
  * Find which oneof group an attribute belongs to
  */
-function findOneOfGroup(
-  resourceName: string,
-  attributeName: string
-): string | undefined {
+function findOneOfGroup(resourceName: string, attributeName: string): string | undefined {
   const resource = getResourceMetadata(resourceName);
   if (!resource?.oneof_groups) return undefined;
 
@@ -571,10 +566,7 @@ function findOneOfGroup(
  * Check if a field references an empty object (ioschemaEmpty in OpenAPI)
  * These fields should use empty block syntax: field_name {}
  */
-function isEmptyObjectField(
-  resourceName: string,
-  attributeName: string
-): boolean {
+function isEmptyObjectField(resourceName: string, attributeName: string): boolean {
   const resource = getResourceMetadata(resourceName);
   if (!resource) return false;
 
@@ -596,7 +588,7 @@ function isEmptyObjectField(
  */
 export function getAttributeSyntaxGuidance(
   resourceName: string,
-  attributeName: string
+  attributeName: string,
 ): AttributeSyntaxGuidance | null {
   const resource = getResourceMetadata(resourceName);
   if (!resource) return null;
@@ -684,9 +676,7 @@ export function getAttributeSyntaxGuidance(
 /**
  * Generate a complete syntax guide for a resource
  */
-export function generateTerraformSyntaxGuide(
-  resourceName: string
-): ResourceSyntaxGuide | null {
+export function generateTerraformSyntaxGuide(resourceName: string): ResourceSyntaxGuide | null {
   const resource = getResourceMetadata(resourceName);
   if (!resource) return null;
 
@@ -737,7 +727,7 @@ function generateSyntaxGuideMarkdown(
   resource: ResourceMetadata,
   blocks: string[],
   attributes: string[],
-  oneOfGroups: Record<string, string[]>
+  oneOfGroups: Record<string, string[]>,
 ): string {
   const lines: string[] = [
     `# Terraform Syntax Guide: ${resourceName}`,
@@ -810,7 +800,7 @@ function generateSyntaxGuideMarkdown(
     for (const [groupName, fields] of Object.entries(oneOfGroups)) {
       lines.push(`### \`${groupName}\``);
       lines.push('');
-      lines.push(`**Choose ONE**: ${fields.map(f => `\`${f}\``).join(', ')}`);
+      lines.push(`**Choose ONE**: ${fields.map((f) => `\`${f}\``).join(', ')}`);
       lines.push('');
 
       // Show example for each option
@@ -854,7 +844,7 @@ export function getOneOfBlockAttributes(resourceName: string): string[] {
  */
 export function validateConfigurationSyntax(
   resourceName: string,
-  configurationSnippet: string
+  configurationSnippet: string,
 ): {
   valid: boolean;
   errors: string[];
@@ -884,7 +874,9 @@ export function validateConfigurationSyntax(
         const guidance = getAttributeSyntaxGuidance(resourceName, name);
         if (guidance) {
           errors.push(`Incorrect syntax: \`${name}\` is a block-type attribute, not a boolean`);
-          suggestions.push(`Use \`${guidance.correctSyntax}\` instead of \`${guidance.incorrectSyntax.split('  #')[0].trim()}\``);
+          suggestions.push(
+            `Use \`${guidance.correctSyntax}\` instead of \`${guidance.incorrectSyntax.split('  #')[0].trim()}\``,
+          );
         }
       }
 
@@ -917,21 +909,27 @@ export function validateConfigurationSyntax(
 /**
  * Get a quick reference for all oneof groups in a resource
  */
-export function getOneOfGroupsQuickReference(resourceName: string): Record<string, {
-  fields: string[];
-  default?: string;
-  description: string;
-  syntax: Record<string, string>;
-}> {
-  const resource = getResourceMetadata(resourceName);
-  if (!resource || !resource.oneof_groups) return {};
-
-  const result: Record<string, {
+export function getOneOfGroupsQuickReference(resourceName: string): Record<
+  string,
+  {
     fields: string[];
     default?: string;
     description: string;
     syntax: Record<string, string>;
-  }> = {};
+  }
+> {
+  const resource = getResourceMetadata(resourceName);
+  if (!resource?.oneof_groups) return {};
+
+  const result: Record<
+    string,
+    {
+      fields: string[];
+      default?: string;
+      description: string;
+      syntax: Record<string, string>;
+    }
+  > = {};
 
   for (const [groupName, group] of Object.entries(resource.oneof_groups)) {
     const syntax: Record<string, string> = {};
@@ -961,11 +959,14 @@ export function getOneOfGroupsQuickReference(resourceName: string): Record<strin
 export function getAllBlockAttributesQuickReference(): {
   totalResources: number;
   totalBlockAttributes: number;
-  resources: Record<string, {
-    blockCount: number;
-    oneOfGroupsCount: number;
-    sampleBlockAttributes: string[];
-  }>;
+  resources: Record<
+    string,
+    {
+      blockCount: number;
+      oneOfGroupsCount: number;
+      sampleBlockAttributes: string[];
+    }
+  >;
 } {
   const metadata = loadResourceMetadata();
   if (!metadata) {
@@ -976,11 +977,14 @@ export function getAllBlockAttributesQuickReference(): {
     };
   }
 
-  const resources: Record<string, {
-    blockCount: number;
-    oneOfGroupsCount: number;
-    sampleBlockAttributes: string[];
-  }> = {};
+  const resources: Record<
+    string,
+    {
+      blockCount: number;
+      oneOfGroupsCount: number;
+      sampleBlockAttributes: string[];
+    }
+  > = {};
 
   let totalBlockAttributes = 0;
 

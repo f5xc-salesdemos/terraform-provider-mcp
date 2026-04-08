@@ -10,7 +10,7 @@
  * Tool: f5xc_terraform_api
  */
 
-import { ApiInput } from '../schemas/common.js';
+import type { ApiInput } from '../schemas/common.js';
 import { ResponseFormat } from '../types.js';
 import {
   searchApiSpecs,
@@ -79,12 +79,7 @@ function handleSearch(input: ApiInput, format: ResponseFormat): string {
   }
 
   // Markdown format
-  const lines: string[] = [
-    `# API Spec Search: "${query}"`,
-    '',
-    `**Found**: ${results.length} specification(s)`,
-    '',
-  ];
+  const lines: string[] = [`# API Spec Search: "${query}"`, '', `**Found**: ${results.length} specification(s)`, ''];
 
   if (results.length === 0) {
     lines.push('No matching API specifications found.');
@@ -153,12 +148,7 @@ function handleGet(input: ApiInput, format: ResponseFormat): string {
   }
 
   // Markdown format
-  const lines: string[] = [
-    `# API Specification: ${spec.schemaName}`,
-    '',
-    `**File**: ${spec.name}`,
-    '',
-  ];
+  const lines: string[] = [`# API Specification: ${spec.schemaName}`, '', `**File**: ${spec.name}`, ''];
 
   if (content?.info) {
     lines.push('## Info');
@@ -175,8 +165,8 @@ function handleGet(input: ApiInput, format: ResponseFormat): string {
     lines.push(`## Endpoints (${pathKeys.length})`);
     lines.push('');
     for (const path of pathKeys.slice(0, 20)) {
-      const methods = Object.keys(content.paths[path]).filter(
-        (m) => ['get', 'post', 'put', 'delete', 'patch'].includes(m.toLowerCase()),
+      const methods = Object.keys(content.paths[path]).filter((m) =>
+        ['get', 'post', 'put', 'delete', 'patch'].includes(m.toLowerCase()),
       );
       lines.push(`- \`${methods.join(', ').toUpperCase()}\` ${path}`);
     }

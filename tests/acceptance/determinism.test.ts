@@ -20,11 +20,8 @@ import {
   E2E_SKIP_MESSAGE,
   TERRAFORM_SKIP_MESSAGE,
 } from '../utils/ci-environment.js';
-import {
-  TerraformRunner,
-  isTerraformAvailable,
-} from '../utils/terraform-runner.js';
-import { MCPClient, createMCPClient } from '../utils/mcp-client.js';
+import { TerraformRunner, isTerraformAvailable } from '../utils/terraform-runner.js';
+import { type MCPClient, createMCPClient } from '../utils/mcp-client.js';
 import { ResponseFormat } from '../../src/types.js';
 
 // Test configuration
@@ -56,13 +53,7 @@ describe('MCP Server Determinism Validation', () => {
   // ===========================================================================
 
   describe('MCP Metadata Tool Outputs', { timeout: VALIDATION_TIMEOUT }, () => {
-    const resourceTypes = [
-      'namespace',
-      'origin_pool',
-      'http_loadbalancer',
-      'healthcheck',
-      'app_firewall',
-    ];
+    const resourceTypes = ['namespace', 'origin_pool', 'http_loadbalancer', 'healthcheck', 'app_firewall'];
 
     describe.each(resourceTypes)('Resource: %s', (resourceType) => {
       let terraform: TerraformRunner;
@@ -140,7 +131,7 @@ describe('MCP Server Determinism Validation', () => {
       if (skipTests || !terraform) return;
       // Just cleanup directory, no destroy needed
       try {
-        const fs = await import('fs');
+        const fs = await import('node:fs');
         fs.rmSync(terraform.getWorkDir(), { recursive: true, force: true });
       } catch {
         // Ignore cleanup errors
@@ -295,7 +286,7 @@ resource "f5xc_healthcheck" "test" {
     afterAll(async () => {
       if (skipTests || !terraform) return;
       try {
-        const fs = await import('fs');
+        const fs = await import('node:fs');
         fs.rmSync(terraform.getWorkDir(), { recursive: true, force: true });
       } catch {
         // Ignore cleanup errors
@@ -809,10 +800,7 @@ resource "f5xc_origin_pool" "test" {
       // Note: This may not catch the error if the validator doesn't support this check
       // The test documents expected behavior
       if (!result.valid) {
-        expect(result.errors.some(e =>
-          e.message?.includes('block') ||
-          e.type === 'boolean_assignment'
-        )).toBe(true);
+        expect(result.errors.some((e) => e.message?.includes('block') || e.type === 'boolean_assignment')).toBe(true);
       }
     });
   });
@@ -906,7 +894,7 @@ resource "f5xc_origin_pool" "test" {
       afterAll(async () => {
         if (skipTests || !terraform) return;
         try {
-          const fs = await import('fs');
+          const fs = await import('node:fs');
           fs.rmSync(terraform.getWorkDir(), { recursive: true, force: true });
         } catch {
           // Ignore cleanup errors
@@ -964,7 +952,7 @@ resource "f5xc_origin_pool" "test" {
 
       // Cleanup
       try {
-        const fs = await import('fs');
+        const fs = await import('node:fs');
         fs.rmSync(terraform.getWorkDir(), { recursive: true, force: true });
       } catch {
         // Ignore cleanup errors

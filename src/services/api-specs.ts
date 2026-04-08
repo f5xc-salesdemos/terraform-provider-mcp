@@ -5,9 +5,9 @@
  * Loads and manages F5 Distributed Cloud OpenAPI specifications
  */
 
-import { readFileSync, existsSync, readdirSync } from 'fs';
-import { join, dirname, basename as _basename } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { ApiSpec, OpenAPISpec, SearchResult, SchemaDefinition } from '../types.js';
 
 // Get the package root directory
@@ -43,7 +43,7 @@ function parseSchemaName(filename: string): string {
   // Split by dots and get the meaningful parts
   const parts = withoutSuffix.split('.');
   // Find the schema name (usually after 'schema' or the last meaningful part)
-  const schemaIndex = parts.findIndex(p => p === 'schema');
+  const schemaIndex = parts.indexOf('schema');
   if (schemaIndex !== -1 && schemaIndex < parts.length - 1) {
     // Get everything after 'schema'
     return parts.slice(schemaIndex + 1).join('_');
@@ -67,7 +67,7 @@ export function loadAllApiSpecs(): ApiSpec[] {
     return allSpecs;
   }
 
-  const files = readdirSync(API_SPECS_PATH).filter(f => f.endsWith('.json'));
+  const files = readdirSync(API_SPECS_PATH).filter((f) => f.endsWith('.json'));
 
   for (const file of files) {
     const schemaName = parseSchemaName(file);
@@ -86,22 +86,23 @@ export function loadAllApiSpecs(): ApiSpec[] {
  */
 export function getApiSpec(identifier: string): ApiSpec | null {
   if (specsCache.has(identifier)) {
-    return specsCache.get(identifier)!;
+    return specsCache.get(identifier) ?? null;
   }
 
   const specs = loadAllApiSpecs();
   const identifierLower = identifier.toLowerCase();
 
   // Try to find by schema name first
-  let spec = specs.find(s =>
-    s.schemaName.toLowerCase() === identifierLower ||
-    s.schemaName.toLowerCase().replace(/_/g, '-') === identifierLower ||
-    s.schemaName.toLowerCase().includes(identifierLower)
+  let spec = specs.find(
+    (s) =>
+      s.schemaName.toLowerCase() === identifierLower ||
+      s.schemaName.toLowerCase().replace(/_/g, '-') === identifierLower ||
+      s.schemaName.toLowerCase().includes(identifierLower),
   );
 
   // Then try by filename
   if (!spec) {
-    spec = specs.find(s => s.name.toLowerCase().includes(identifierLower));
+    spec = specs.find((s) => s.name.toLowerCase().includes(identifierLower));
   }
 
   if (spec && existsSync(spec.path)) {
@@ -133,7 +134,7 @@ export function searchApiSpecs(query: string, limit: number = 20): SearchResult[
   const specs = loadAllApiSpecs();
   const results: SearchResult[] = [];
   const queryLower = query.toLowerCase();
-  const queryTerms = queryLower.split(/\s+/).filter(t => t.length > 0);
+  const queryTerms = queryLower.split(/\s+/).filter((t) => t.length > 0);
 
   for (const spec of specs) {
     let score = 0;
@@ -203,7 +204,7 @@ export function searchApiSpecs(query: string, limit: number = 20): SearchResult[
 export function findEndpoints(
   pattern: string,
   method?: string,
-  limit: number = 20
+  limit: number = 20,
 ): Array<{
   specName: string;
   path: string;
@@ -262,10 +263,7 @@ export function findEndpoints(
 /**
  * Get schema definition from a spec
  */
-export function getSchemaDefinition(
-  specIdentifier: string,
-  definitionName: string
-): SchemaDefinition | null {
+export function getSchemaDefinition(specIdentifier: string, definitionName: string): SchemaDefinition | null {
   const spec = getApiSpec(specIdentifier);
   if (!spec?.content) return null;
 
@@ -314,7 +312,7 @@ export function getApiSpecsSummary(): {
   for (const spec of specs) {
     // Extract category from schema name (e.g., 'views', 'api_sec', etc.)
     const parts = spec.name.split('.');
-    const schemaIndex = parts.findIndex(p => p === 'schema');
+    const schemaIndex = parts.indexOf('schema');
     if (schemaIndex !== -1 && schemaIndex < parts.length - 1) {
       const category = parts[schemaIndex + 1];
       categories[category] = (categories[category] || 0) + 1;

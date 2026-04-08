@@ -56,11 +56,7 @@ export function setupDocumentationModeEnv(): void {
 /**
  * Set up environment for authenticated mode with token
  */
-export function setupAuthenticatedModeEnv(options?: {
-  apiUrl?: string;
-  apiToken?: string;
-  namespace?: string;
-}): void {
+export function setupAuthenticatedModeEnv(options?: { apiUrl?: string; apiToken?: string; namespace?: string }): void {
   clearF5XCEnvVars();
   process.env.F5XC_API_URL = options?.apiUrl || 'https://test.console.ves.volterra.io';
   process.env.F5XC_API_TOKEN = options?.apiToken || 'test-token';
@@ -78,7 +74,7 @@ export function setupAuthenticatedModeEnv(options?: {
 export function hasRealCredentials(): boolean {
   return Boolean(
     (process.env.F5XC_API_URL || process.env.F5XC_TEST_API_URL) &&
-    (process.env.F5XC_API_TOKEN || process.env.F5XC_TEST_API_TOKEN)
+      (process.env.F5XC_API_TOKEN || process.env.F5XC_TEST_API_TOKEN),
   );
 }
 
@@ -91,8 +87,8 @@ export function getRealCredentials(): { apiUrl: string; apiToken: string } | nul
     return null;
   }
   return {
-    apiUrl: process.env.F5XC_API_URL || process.env.F5XC_TEST_API_URL!,
-    apiToken: process.env.F5XC_API_TOKEN || process.env.F5XC_TEST_API_TOKEN!,
+    apiUrl: process.env.F5XC_API_URL || (process.env.F5XC_TEST_API_URL ?? ''),
+    apiToken: process.env.F5XC_API_TOKEN || (process.env.F5XC_TEST_API_TOKEN ?? ''),
   };
 }
 
@@ -166,11 +162,9 @@ export function setupE2ETestEnv(): {
 /**
  * Skip message for E2E tests when credentials are not available
  */
-export const E2E_SKIP_MESSAGE =
-  'E2E tests require F5XC_TEST_API_URL and F5XC_TEST_API_TOKEN environment variables';
+export const E2E_SKIP_MESSAGE = 'E2E tests require F5XC_TEST_API_URL and F5XC_TEST_API_TOKEN environment variables';
 
 /**
  * Skip message for Terraform tests when CLI is not available
  */
-export const TERRAFORM_SKIP_MESSAGE =
-  'Terraform CLI is not available - skipping Terraform-based tests';
+export const TERRAFORM_SKIP_MESSAGE = 'Terraform CLI is not available - skipping Terraform-based tests';

@@ -7,10 +7,10 @@
  * Validates determinism by tracking apply attempts.
  */
 
-import { execSync, spawn } from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
+import { execSync, spawn } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
 
 export interface TerraformResult {
   success: boolean;
@@ -61,8 +61,6 @@ export function getTerraformVersion(): string | null {
  */
 export class TerraformRunner {
   private workDir: string;
-  private testName: string;
-  private initialized: boolean = false;
   private providerPath: string;
 
   constructor(testName: string) {
@@ -154,8 +152,10 @@ provider "f5xc" {
     // Check if the error is just about provider registry query failure.
     if (!result.success) {
       const output = result.output.toLowerCase();
-      if (output.includes('provider development overrides are in effect') ||
-          output.includes('skip terraform init when using provider development overrides')) {
+      if (
+        output.includes('provider development overrides are in effect') ||
+        output.includes('skip terraform init when using provider development overrides')
+      ) {
         // This is expected with dev_overrides - treat as success
         this.initialized = true;
         return {
@@ -183,8 +183,10 @@ provider "f5xc" {
       return {
         success: jsonResult.valid === true,
         output: result.output,
-        errors: jsonResult.diagnostics?.filter((d: { severity: string }) => d.severity === 'error')
-          .map((d: { summary: string; detail?: string }) => `${d.summary}: ${d.detail || ''}`) || [],
+        errors:
+          jsonResult.diagnostics
+            ?.filter((d: { severity: string }) => d.severity === 'error')
+            .map((d: { summary: string; detail?: string }) => `${d.summary}: ${d.detail || ''}`) || [],
         exitCode: result.exitCode,
       };
     } catch {

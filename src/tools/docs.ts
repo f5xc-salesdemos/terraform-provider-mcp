@@ -8,13 +8,9 @@
  * Tool: f5xc_terraform_docs
  */
 
-import { DocsInput } from '../schemas/common.js';
+import type { DocsInput } from '../schemas/common.js';
 import { ResponseFormat } from '../types.js';
-import {
-  searchDocumentation,
-  getDocumentation,
-  listDocumentation,
-} from '../services/documentation.js';
+import { searchDocumentation, getDocumentation, listDocumentation } from '../services/documentation.js';
 
 // =============================================================================
 // HANDLER

@@ -9,13 +9,9 @@
  * Tool: f5xc_terraform_addon
  */
 
-import { AddonInput } from '../schemas/common.js';
+import type { AddonInput } from '../schemas/common.js';
 import { ResponseFormat } from '../types.js';
-import {
-  listAddonServices,
-  checkAddonActivation,
-  getAddonWorkflow,
-} from '../services/addons.js';
+import { listAddonServices, checkAddonActivation, getAddonWorkflow } from '../services/addons.js';
 
 // =============================================================================
 // HANDLER
@@ -49,7 +45,8 @@ function handleList(input: AddonInput, format: ResponseFormat): string {
 
   // Map tier from schema enum to service format
   const tierFilter = tier as 'STANDARD' | 'ADVANCED' | 'PREMIUM' | undefined;
-  const activationFilter = activation_type === 'partial' ? 'managed' : (activation_type as 'self' | 'managed' | undefined);
+  const activationFilter =
+    activation_type === 'partial' ? 'managed' : (activation_type as 'self' | 'managed' | undefined);
 
   const result = listAddonServices(tierFilter, activationFilter);
 

@@ -13,14 +13,9 @@
  */
 
 import axios from 'axios';
-import { AuthInput } from '../schemas/common.js';
+import type { AuthInput } from '../schemas/common.js';
 import { ResponseFormat } from '../types.js';
-import {
-  CredentialManager,
-  AuthMode,
-  getProfileManager,
-  type Profile,
-} from '@robinmordasiewicz/f5xc-auth';
+import { CredentialManager, AuthMode, getProfileManager, type Profile } from '@robinmordasiewicz/f5xc-auth';
 
 // =============================================================================
 // TOOL DEFINITION
@@ -262,15 +257,11 @@ function formatProfileListMarkdown(
 
   for (const p of profiles) {
     const active = p.is_active ? '**Yes**' : 'No';
-    lines.push(
-      `| ${p.name} | ${p.tenant || '-'} | ${p.namespace || '-'} | ${p.auth_method} | ${active} |`,
-    );
+    lines.push(`| ${p.name} | ${p.tenant || '-'} | ${p.namespace || '-'} | ${p.auth_method} | ${active} |`);
   }
 
   lines.push('');
-  lines.push(
-    '> Use `operation: "switch", profile_name: "<name>"` to change the active profile.',
-  );
+  lines.push('> Use `operation: "switch", profile_name: "<name>"` to change the active profile.');
 
   return lines.join('\n');
 }
@@ -278,10 +269,7 @@ function formatProfileListMarkdown(
 /**
  * Handle 'switch' operation - switch to a different profile
  */
-async function handleSwitch(
-  profileName: string | undefined,
-  format: ResponseFormat,
-): Promise<string> {
+async function handleSwitch(profileName: string | undefined, format: ResponseFormat): Promise<string> {
   if (!profileName) {
     throw new Error('profile_name is required for switch operation');
   }
@@ -317,12 +305,7 @@ async function handleSwitch(
     return JSON.stringify(response, null, 2);
   }
 
-  const lines = [
-    '# Profile Switched',
-    '',
-    `Successfully switched to profile: **${profileName}**`,
-    '',
-  ];
+  const lines = ['# Profile Switched', '', `Successfully switched to profile: **${profileName}**`, ''];
 
   if (response.authenticated) {
     lines.push(`- Tenant: ${response.tenant}`);
@@ -495,16 +478,13 @@ function maskSecret(value: string, showLast = 8): string {
   if (value.length <= showLast) {
     return '****';
   }
-  return '****...' + value.slice(-showLast);
+  return `****...${value.slice(-showLast)}`;
 }
 
 /**
  * Build environment variables from credential manager
  */
-function buildEnvironmentVariables(
-  cm: CredentialManager,
-  maskSecrets: boolean,
-): TerraformEnvVars {
+function buildEnvironmentVariables(cm: CredentialManager, maskSecrets: boolean): TerraformEnvVars {
   const vars: TerraformEnvVars = {};
 
   // Always include API URL
@@ -544,11 +524,7 @@ function buildEnvironmentVariables(
 /**
  * Format shell export statements
  */
-function formatShellExports(
-  envVars: TerraformEnvVars,
-  profileName: string | null,
-  authMode: string,
-): string {
+function formatShellExports(envVars: TerraformEnvVars, profileName: string | null, authMode: string): string {
   const lines: string[] = [
     '#!/bin/bash',
     '# F5XC Terraform Provider Configuration',
@@ -581,10 +557,7 @@ function formatShellExports(
 /**
  * Format .env file content
  */
-function formatDotEnv(
-  envVars: TerraformEnvVars,
-  profileName: string | null,
-): string {
+function formatDotEnv(envVars: TerraformEnvVars, profileName: string | null): string {
   const lines: string[] = [
     '# F5XC Terraform Provider Configuration',
     `# Profile: ${profileName || 'environment'}`,
@@ -604,26 +577,26 @@ function formatDotEnv(
 /**
  * Format JSON output
  */
-function formatEnvJson(
-  envVars: TerraformEnvVars,
-  profileName: string | null,
-  authMode: string,
-): string {
-  return JSON.stringify({
-    profile: profileName,
-    auth_method: authMode,
-    variables: envVars,
-    shell_command: Object.entries(envVars)
-      .filter(([_, v]) => v)
-      .map(([k, v]) => `export ${k}="${v}"`)
-      .join('; '),
-    provider_block: {
-      critical_warning: 'ALWAYS use robinmordasiewicz/f5xc - NEVER use volterraedge/volterra (deprecated)',
-      source: 'robinmordasiewicz/f5xc',
-      deprecated_sources: ['volterraedge/volterra', 'hashicorp/volterra'],
-      terraform_config: TERRAFORM_PROVIDER_BLOCK,
+function formatEnvJson(envVars: TerraformEnvVars, profileName: string | null, authMode: string): string {
+  return JSON.stringify(
+    {
+      profile: profileName,
+      auth_method: authMode,
+      variables: envVars,
+      shell_command: Object.entries(envVars)
+        .filter(([_, v]) => v)
+        .map(([k, v]) => `export ${k}="${v}"`)
+        .join('; '),
+      provider_block: {
+        critical_warning: 'ALWAYS use robinmordasiewicz/f5xc - NEVER use volterraedge/volterra (deprecated)',
+        source: 'robinmordasiewicz/f5xc',
+        deprecated_sources: ['volterraedge/volterra', 'hashicorp/volterra'],
+        terraform_config: TERRAFORM_PROVIDER_BLOCK,
+      },
     },
-  }, null, 2);
+    null,
+    2,
+  );
 }
 
 /**
@@ -641,7 +614,8 @@ async function handleTerraformEnv(
   if (!credentialManager.isAuthenticated()) {
     const error = {
       error: 'No credentials configured (documentation mode)',
-      suggestion: 'Configure F5XC_API_TOKEN environment variable or create a profile at ~/.config/f5xc/profiles/<name>.json',
+      suggestion:
+        'Configure F5XC_API_TOKEN environment variable or create a profile at ~/.config/f5xc/profiles/<name>.json',
     };
 
     if (format === ResponseFormat.JSON) {
@@ -778,7 +752,8 @@ async function handleTerraformEnv(
  */
 function handleTerraformBlock(format: ResponseFormat): string {
   const result = {
-    critical_warning: 'ALWAYS use robinmordasiewicz/f5xc - NEVER use volterraedge/volterra (deprecated legacy provider)',
+    critical_warning:
+      'ALWAYS use robinmordasiewicz/f5xc - NEVER use volterraedge/volterra (deprecated legacy provider)',
     correct_source: 'robinmordasiewicz/f5xc',
     deprecated_sources: ['volterraedge/volterra', 'hashicorp/volterra'],
     registry_url: 'https://registry.terraform.io/providers/robinmordasiewicz/f5xc/latest',

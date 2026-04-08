@@ -14,16 +14,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  CredentialManager,
-  AuthMode,
-  getProfileManager,
-} from '@robinmordasiewicz/f5xc-auth';
-import {
-  clearF5XCEnvVars,
-  setupDocumentationModeEnv,
-  setupAuthenticatedModeEnv,
-} from '../utils/ci-environment.js';
+import { CredentialManager, AuthMode, getProfileManager } from '@robinmordasiewicz/f5xc-auth';
+import { clearF5XCEnvVars, setupDocumentationModeEnv, setupAuthenticatedModeEnv } from '../utils/ci-environment.js';
 
 describe('Auth Integration Tests', () => {
   const originalEnv = process.env;
@@ -365,10 +357,11 @@ describe('Auth Integration Test Matrix', () => {
     },
     {
       name: 'Custom tenant URL → Extract tenant',
-      setup: () => setupAuthenticatedModeEnv({
-        apiUrl: 'https://custom-tenant.console.ves.volterra.io',
-        apiToken: 'custom-token',
-      }),
+      setup: () =>
+        setupAuthenticatedModeEnv({
+          apiUrl: 'https://custom-tenant.console.ves.volterra.io',
+          apiToken: 'custom-token',
+        }),
       expectedMode: AuthMode.TOKEN,
       expectedAuthenticated: true,
       expectedTenant: 'custom-tenant',

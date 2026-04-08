@@ -11,11 +11,11 @@
  *   PROVIDER_VERSION=3.24.0 node scripts/download-data.js
  */
 
-import { createWriteStream, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
-import https from "node:https";
-import { dirname, join } from "node:path";
-import { execSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { createWriteStream, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import https from 'node:https';
+import { dirname, join } from 'node:path';
+import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,28 +25,28 @@ const __dirname = dirname(__filename);
  */
 const CONFIG = {
   /** GitHub repository for the Terraform provider */
-  GITHUB_REPO: "f5xc-salesdemos/terraform-provider-f5xc",
+  GITHUB_REPO: 'f5xc-salesdemos/terraform-provider-f5xc',
 
   /** GitHub API base for releases */
-  GITHUB_API_BASE: "https://api.github.com/repos/f5xc-salesdemos/terraform-provider-f5xc/releases",
+  GITHUB_API_BASE: 'https://api.github.com/repos/f5xc-salesdemos/terraform-provider-f5xc/releases',
 
   /** Project root (parent of scripts/) */
-  PROJECT_ROOT: join(__dirname, ".."),
+  PROJECT_ROOT: join(__dirname, '..'),
 
   /** Destination directory for extracted data */
-  DIST_DIR: join(__dirname, "..", "dist"),
+  DIST_DIR: join(__dirname, '..', 'dist'),
 
   /** Temporary download file */
-  TEMP_TARBALL: join(__dirname, "..", ".tmp-mcp-data.tar.gz"),
+  TEMP_TARBALL: join(__dirname, '..', '.tmp-mcp-data.tar.gz'),
 
   /** Expected directories after extraction */
-  EXPECTED_DIRS: ["docs", "metadata"],
+  EXPECTED_DIRS: ['docs', 'metadata'],
 
   /** Request timeout in milliseconds */
   TIMEOUT: 120_000,
 
   /** User agent for GitHub API */
-  USER_AGENT: "f5xc-terraform-mcp/download-data",
+  USER_AGENT: 'f5xc-terraform-mcp/download-data',
 };
 
 /**
@@ -66,7 +66,7 @@ const log = {
  */
 function parseCliVersion() {
   const args = process.argv.slice(2);
-  const versionIndex = args.indexOf("--version");
+  const versionIndex = args.indexOf('--version');
   if (versionIndex !== -1 && versionIndex + 1 < args.length) {
     return args[versionIndex + 1];
   }
@@ -79,13 +79,13 @@ function parseCliVersion() {
  * @returns {string} The version from package.json
  */
 function readPackageVersion() {
-  const packagePath = join(CONFIG.PROJECT_ROOT, "package.json");
+  const packagePath = join(CONFIG.PROJECT_ROOT, 'package.json');
   if (!existsSync(packagePath)) {
     throw new Error(`package.json not found at ${packagePath}`);
   }
-  const pkg = JSON.parse(readFileSync(packagePath, "utf-8"));
+  const pkg = JSON.parse(readFileSync(packagePath, 'utf-8'));
   if (!pkg.version) {
-    throw new Error("No version field in package.json");
+    throw new Error('No version field in package.json');
   }
   return pkg.version;
 }
@@ -121,7 +121,7 @@ function resolveVersion() {
  */
 function buildHeaders(accept) {
   const headers = {
-    "User-Agent": CONFIG.USER_AGENT,
+    'User-Agent': CONFIG.USER_AGENT,
     Accept: accept,
   };
 
@@ -148,7 +148,7 @@ function httpsGet(url, headers) {
     const options = {
       hostname: urlObj.hostname,
       path: urlObj.pathname + urlObj.search,
-      method: "GET",
+      method: 'GET',
       headers,
       timeout: CONFIG.TIMEOUT,
     };
@@ -170,15 +170,15 @@ function httpsGet(url, headers) {
         return;
       }
 
-      let data = "";
-      response.on("data", (chunk) => {
+      let data = '';
+      response.on('data', (chunk) => {
         data += chunk;
       });
-      response.on("end", () => resolve(data));
+      response.on('end', () => resolve(data));
     });
 
-    request.on("error", reject);
-    request.on("timeout", () => {
+    request.on('error', reject);
+    request.on('timeout', () => {
       request.destroy();
       reject(new Error(`Request timed out: ${url}`));
     });
@@ -196,12 +196,12 @@ function httpsGet(url, headers) {
  */
 function downloadFile(url, destPath) {
   return new Promise((resolve, reject) => {
-    const headers = buildHeaders("application/octet-stream");
+    const headers = buildHeaders('application/octet-stream');
     const urlObj = new URL(url);
     const options = {
       hostname: urlObj.hostname,
       path: urlObj.pathname + urlObj.search,
-      method: "GET",
+      method: 'GET',
       headers,
       timeout: CONFIG.TIMEOUT,
     };
@@ -213,7 +213,7 @@ function downloadFile(url, destPath) {
       if (response.statusCode === 301 || response.statusCode === 302) {
         const redirectUrl = response.headers.location;
         if (redirectUrl) {
-          log.info("Following redirect...");
+          log.info('Following redirect...');
           file.close();
           downloadFile(redirectUrl, destPath).then(resolve).catch(reject);
           return;
@@ -228,36 +228,36 @@ function downloadFile(url, destPath) {
         return;
       }
 
-      const contentLength = response.headers["content-length"];
+      const contentLength = response.headers['content-length'];
       if (contentLength) {
         log.info(`Download size: ${(parseInt(contentLength, 10) / 1024 / 1024).toFixed(2)} MB`);
       }
 
       response.pipe(file);
 
-      file.on("finish", () => {
+      file.on('finish', () => {
         file.close();
         resolve();
       });
 
-      file.on("error", (err) => {
+      file.on('error', (err) => {
         file.close();
         rmSync(destPath, { force: true });
         reject(err);
       });
     });
 
-    request.on("error", (err) => {
+    request.on('error', (err) => {
       file.close();
       rmSync(destPath, { force: true });
       reject(err);
     });
 
-    request.on("timeout", () => {
+    request.on('timeout', () => {
       request.destroy();
       file.close();
       rmSync(destPath, { force: true });
-      reject(new Error("Download timed out"));
+      reject(new Error('Download timed out'));
     });
 
     request.end();
@@ -275,25 +275,25 @@ function downloadFile(url, destPath) {
 async function fetchRelease(version) {
   const taggedUrl = `${CONFIG.GITHUB_API_BASE}/tags/v${version}`;
   const latestUrl = `${CONFIG.GITHUB_API_BASE}/latest`;
-  const headers = buildHeaders("application/vnd.github.v3+json");
+  const headers = buildHeaders('application/vnd.github.v3+json');
 
   // Try tagged release first
   log.info(`Fetching release for tag v${version}...`);
   try {
     const body = await httpsGet(taggedUrl, headers);
     const release = JSON.parse(body);
-    log.success(`Found tagged release: ${release.tag_name} (${release.name || ""})`);
+    log.success(`Found tagged release: ${release.tag_name} (${release.name || ''})`);
     return release;
   } catch (err) {
     log.warn(`Tagged release v${version} not found: ${err.message}`);
   }
 
   // Fall back to latest
-  log.info("Falling back to latest release...");
+  log.info('Falling back to latest release...');
   try {
     const body = await httpsGet(latestUrl, headers);
     const release = JSON.parse(body);
-    log.success(`Found latest release: ${release.tag_name} (${release.name || ""})`);
+    log.success(`Found latest release: ${release.tag_name} (${release.name || ''})`);
     return release;
   } catch (err) {
     throw new Error(`Failed to fetch any release: ${err.message}`);
@@ -308,17 +308,16 @@ async function fetchRelease(version) {
  */
 function findDataAsset(release) {
   if (!release.assets || !Array.isArray(release.assets)) {
-    throw new Error("Release has no assets");
+    throw new Error('Release has no assets');
   }
 
   // Look for mcp-data-{version}.tar.gz pattern
-  const asset = release.assets.find((a) => a.name.startsWith("mcp-data-") && a.name.endsWith(".tar.gz"));
+  const asset = release.assets.find((a) => a.name.startsWith('mcp-data-') && a.name.endsWith('.tar.gz'));
 
   if (!asset) {
-    const available = release.assets.map((a) => a.name).join(", ");
+    const available = release.assets.map((a) => a.name).join(', ');
     throw new Error(
-      `No mcp-data-*.tar.gz asset found in release ${release.tag_name}. ` +
-        `Available assets: ${available || "none"}`
+      `No mcp-data-*.tar.gz asset found in release ${release.tag_name}. ` + `Available assets: ${available || 'none'}`,
     );
   }
 
@@ -340,10 +339,10 @@ function extractTarball(tarballPath, destDir) {
   // Extract with --strip-components=1 to remove the mcp-data/ prefix
   try {
     execSync(`tar -xzf "${tarballPath}" --strip-components=1 -C "${destDir}"`, {
-      stdio: "pipe",
+      stdio: 'pipe',
     });
   } catch (err) {
-    const stderr = err.stderr ? err.stderr.toString() : "";
+    const stderr = err.stderr ? err.stderr.toString() : '';
     throw new Error(`tar extraction failed: ${stderr || err.message}`);
   }
 }
@@ -377,7 +376,7 @@ function countFiles(dir) {
  * @param {string} destDir - The directory to verify
  */
 function verifyExtraction(destDir) {
-  log.info("Verifying extracted content...");
+  log.info('Verifying extracted content...');
 
   const missing = [];
   for (const expected of CONFIG.EXPECTED_DIRS) {
@@ -389,8 +388,8 @@ function verifyExtraction(destDir) {
 
   if (missing.length > 0) {
     throw new Error(
-      `Extraction verification failed: missing expected directories: ${missing.join(", ")}. ` +
-        `Contents of ${destDir}: ${existsSync(destDir) ? readdirSync(destDir).join(", ") : "(not found)"}`
+      `Extraction verification failed: missing expected directories: ${missing.join(', ')}. ` +
+        `Contents of ${destDir}: ${existsSync(destDir) ? readdirSync(destDir).join(', ') : '(not found)'}`,
     );
   }
 
@@ -408,7 +407,7 @@ function verifyExtraction(destDir) {
 function cleanup() {
   if (existsSync(CONFIG.TEMP_TARBALL)) {
     rmSync(CONFIG.TEMP_TARBALL, { force: true });
-    log.info("Cleaned up temporary files");
+    log.info('Cleaned up temporary files');
   }
 }
 
@@ -416,10 +415,10 @@ function cleanup() {
  * Main entry point
  */
 async function main() {
-  console.log("=".repeat(60));
-  console.log("Download MCP Data from terraform-provider-f5xc");
+  console.log('='.repeat(60));
+  console.log('Download MCP Data from terraform-provider-f5xc');
   console.log(`Source: github.com/${CONFIG.GITHUB_REPO}`);
-  console.log("=".repeat(60));
+  console.log('='.repeat(60));
 
   try {
     // 1. Resolve version
@@ -435,7 +434,7 @@ async function main() {
     // 4. Download the tarball
     log.info(`Downloading ${asset.name}...`);
     await downloadFile(asset.browser_download_url, CONFIG.TEMP_TARBALL);
-    log.success("Download completed");
+    log.success('Download completed');
 
     // 5. Clean existing dist/ content that will be replaced
     if (existsSync(CONFIG.DIST_DIR)) {
@@ -461,14 +460,14 @@ async function main() {
       return sum + countFiles(join(CONFIG.DIST_DIR, dir));
     }, 0);
 
-    console.log("");
-    console.log("=".repeat(60));
-    console.log("Download Summary:");
+    console.log('');
+    console.log('='.repeat(60));
+    console.log('Download Summary:');
     console.log(`  Source:    github.com/${CONFIG.GITHUB_REPO}`);
     console.log(`  Release:   ${release.tag_name}`);
     console.log(`  Asset:     ${asset.name}`);
     console.log(`  Extracted: ${totalFiles} files to dist/`);
-    console.log("=".repeat(60));
+    console.log('='.repeat(60));
   } catch (err) {
     cleanup();
     log.error(err.message);
