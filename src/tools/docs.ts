@@ -8,13 +8,9 @@
  * Tool: f5xc_terraform_docs
  */
 
-import { DocsInput } from '../schemas/common.js';
+import type { DocsInput } from '../schemas/common.js';
 import { ResponseFormat } from '../types.js';
-import {
-  searchDocumentation,
-  getDocumentation,
-  listDocumentation,
-} from '../services/documentation.js';
+import { searchDocumentation, getDocumentation, listDocumentation } from '../services/documentation.js';
 
 // =============================================================================
 // HANDLER
@@ -174,7 +170,9 @@ function handleList(input: DocsInput, format: ResponseFormat): string {
     if (!byType.has(t)) {
       byType.set(t, []);
     }
-    byType.get(t)!.push(doc);
+    const typeList = byType.get(t) ?? [];
+    typeList.push(doc);
+    byType.set(t, typeList);
   }
 
   for (const [docType, typeDocs] of byType) {

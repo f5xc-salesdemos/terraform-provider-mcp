@@ -7,7 +7,7 @@
  * Used in E2E tests to verify Terraform apply created resources correctly.
  */
 
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { type AxiosInstance, type AxiosError } from 'axios';
 
 export interface ResourceDetails {
   name: string;
@@ -42,9 +42,9 @@ export class ResourceValidator {
     this.client = axios.create({
       baseURL: this.apiUrl,
       headers: {
-        'Authorization': `APIToken ${apiToken}`,
+        Authorization: `APIToken ${apiToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       timeout: 30000, // 30 second timeout
     });
@@ -106,9 +106,7 @@ export class ResourceValidator {
    */
   async getOriginPool(namespace: string, name: string): Promise<ValidationResult> {
     try {
-      const response = await this.client.get(
-        `/api/config/namespaces/${namespace}/origin_pools/${name}`,
-      );
+      const response = await this.client.get(`/api/config/namespaces/${namespace}/origin_pools/${name}`);
       return {
         exists: true,
         details: this.extractResourceDetails(response.data),
@@ -123,9 +121,7 @@ export class ResourceValidator {
    */
   async deleteOriginPool(namespace: string, name: string): Promise<boolean> {
     try {
-      await this.client.delete(
-        `/api/config/namespaces/${namespace}/origin_pools/${name}`,
-      );
+      await this.client.delete(`/api/config/namespaces/${namespace}/origin_pools/${name}`);
       return true;
     } catch {
       return false;
@@ -149,9 +145,7 @@ export class ResourceValidator {
    */
   async getHttpLoadBalancer(namespace: string, name: string): Promise<ValidationResult> {
     try {
-      const response = await this.client.get(
-        `/api/config/namespaces/${namespace}/http_loadbalancers/${name}`,
-      );
+      const response = await this.client.get(`/api/config/namespaces/${namespace}/http_loadbalancers/${name}`);
       return {
         exists: true,
         details: this.extractResourceDetails(response.data),
@@ -166,9 +160,7 @@ export class ResourceValidator {
    */
   async deleteHttpLoadBalancer(namespace: string, name: string): Promise<boolean> {
     try {
-      await this.client.delete(
-        `/api/config/namespaces/${namespace}/http_loadbalancers/${name}`,
-      );
+      await this.client.delete(`/api/config/namespaces/${namespace}/http_loadbalancers/${name}`);
       return true;
     } catch {
       return false;
@@ -192,9 +184,7 @@ export class ResourceValidator {
    */
   async getAppFirewall(namespace: string, name: string): Promise<ValidationResult> {
     try {
-      const response = await this.client.get(
-        `/api/config/namespaces/${namespace}/app_firewalls/${name}`,
-      );
+      const response = await this.client.get(`/api/config/namespaces/${namespace}/app_firewalls/${name}`);
       return {
         exists: true,
         details: this.extractResourceDetails(response.data),
@@ -209,9 +199,7 @@ export class ResourceValidator {
    */
   async deleteAppFirewall(namespace: string, name: string): Promise<boolean> {
     try {
-      await this.client.delete(
-        `/api/config/namespaces/${namespace}/app_firewalls/${name}`,
-      );
+      await this.client.delete(`/api/config/namespaces/${namespace}/app_firewalls/${name}`);
       return true;
     } catch {
       return false;
@@ -235,9 +223,7 @@ export class ResourceValidator {
    */
   async getHealthcheck(namespace: string, name: string): Promise<ValidationResult> {
     try {
-      const response = await this.client.get(
-        `/api/config/namespaces/${namespace}/healthchecks/${name}`,
-      );
+      const response = await this.client.get(`/api/config/namespaces/${namespace}/healthchecks/${name}`);
       return {
         exists: true,
         details: this.extractResourceDetails(response.data),
@@ -252,9 +238,7 @@ export class ResourceValidator {
    */
   async deleteHealthcheck(namespace: string, name: string): Promise<boolean> {
     try {
-      await this.client.delete(
-        `/api/config/namespaces/${namespace}/healthchecks/${name}`,
-      );
+      await this.client.delete(`/api/config/namespaces/${namespace}/healthchecks/${name}`);
       return true;
     } catch {
       return false;
@@ -268,11 +252,7 @@ export class ResourceValidator {
   /**
    * Get any resource by type, namespace, and name
    */
-  async getResource(
-    resourceType: string,
-    namespace: string,
-    name: string,
-  ): Promise<ValidationResult> {
+  async getResource(resourceType: string, namespace: string, name: string): Promise<ValidationResult> {
     // Map resource types to API paths
     const pathMap: Record<string, string> = {
       namespace: `/api/web/namespaces/${name}`,
@@ -306,11 +286,7 @@ export class ResourceValidator {
   /**
    * Check if any resource exists
    */
-  async resourceExists(
-    resourceType: string,
-    namespace: string,
-    name: string,
-  ): Promise<boolean> {
+  async resourceExists(resourceType: string, namespace: string, name: string): Promise<boolean> {
     const result = await this.getResource(resourceType, namespace, name);
     return result.exists;
   }
@@ -332,9 +308,7 @@ export class ResourceValidator {
       const actualValue = details.spec?.[key];
 
       if (JSON.stringify(actualValue) !== JSON.stringify(expectedValue)) {
-        mismatches.push(
-          `${key}: expected ${JSON.stringify(expectedValue)}, got ${JSON.stringify(actualValue)}`,
-        );
+        mismatches.push(`${key}: expected ${JSON.stringify(expectedValue)}, got ${JSON.stringify(actualValue)}`);
       }
     }
 
@@ -388,12 +362,7 @@ export class ResourceValidator {
     const deleted: string[] = [];
     const errors: string[] = [];
 
-    const resourceTypes = options.resourceTypes || [
-      'http_loadbalancer',
-      'origin_pool',
-      'app_firewall',
-      'healthcheck',
-    ];
+    const resourceTypes = options.resourceTypes || ['http_loadbalancer', 'origin_pool', 'app_firewall', 'healthcheck'];
 
     // Delete resources in reverse dependency order
     for (const resourceType of resourceTypes) {
@@ -436,11 +405,7 @@ export class ResourceValidator {
   /**
    * Delete any resource by type
    */
-  private async deleteResource(
-    resourceType: string,
-    namespace: string,
-    name: string,
-  ): Promise<boolean> {
+  private async deleteResource(resourceType: string, namespace: string, name: string): Promise<boolean> {
     const deleteMap: Record<string, () => Promise<boolean>> = {
       namespace: () => this.deleteNamespace(name),
       origin_pool: () => this.deleteOriginPool(namespace, name),
@@ -480,7 +445,7 @@ export class ResourceValidator {
    */
   private extractResourceDetails(data: Record<string, unknown>): ResourceDetails {
     return {
-      name: (data.metadata as Record<string, unknown>)?.name as string || data.name as string || '',
+      name: ((data.metadata as Record<string, unknown>)?.name as string) || (data.name as string) || '',
       namespace: (data.metadata as Record<string, unknown>)?.namespace as string,
       metadata: data.metadata as Record<string, unknown>,
       spec: data.spec as Record<string, unknown>,
@@ -491,11 +456,7 @@ export class ResourceValidator {
   /**
    * Handle API errors
    */
-  private handleApiError(
-    error: unknown,
-    resourceType: string,
-    identifier: string,
-  ): ValidationResult {
+  private handleApiError(error: unknown, resourceType: string, identifier: string): ValidationResult {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
 

@@ -9,7 +9,7 @@
  * Tool: f5xc_terraform_discover
  */
 
-import { DiscoverInput } from '../schemas/common.js';
+import type { DiscoverInput } from '../schemas/common.js';
 import { ResponseFormat } from '../types.js';
 import { DocsSchema, ApiSchema, SubscriptionSchema, AddonSchema, AuthSchema } from '../schemas/common.js';
 
@@ -92,9 +92,7 @@ export async function handleDiscover(input: DiscoverInput): Promise<string> {
   const { category, verbose, response_format } = input;
 
   // Filter tools by category
-  const tools = category === 'all'
-    ? TOOL_REGISTRY
-    : TOOL_REGISTRY.filter((t) => t.category === category);
+  const tools = category === 'all' ? TOOL_REGISTRY : TOOL_REGISTRY.filter((t) => t.category === category);
 
   // Build response
   const response = buildResponse(tools, verbose, response_format);
@@ -102,11 +100,7 @@ export async function handleDiscover(input: DiscoverInput): Promise<string> {
   return response;
 }
 
-function buildResponse(
-  tools: ToolInfo[],
-  verbose: boolean,
-  format: ResponseFormat,
-): string {
+function buildResponse(tools: ToolInfo[], verbose: boolean, format: ResponseFormat): string {
   if (format === ResponseFormat.JSON) {
     return JSON.stringify(buildJsonResponse(tools, verbose), null, 2);
   }
@@ -171,7 +165,8 @@ function buildJsonResponse(tools: ToolInfo[], verbose: boolean): DiscoverRespons
       message: 'This provider uses empty blocks {} for mutually exclusive options, NOT boolean values',
       common_mistake: 'no_tls = true, advertise_on_public_default_vip = true, round_robin = true',
       correct_syntax: 'no_tls {}, advertise_on_public_default_vip {}, round_robin {}',
-      recommendation: 'Always query f5xc_terraform_metadata(operation="syntax", resource="...") BEFORE writing Terraform config',
+      recommendation:
+        'Always query f5xc_terraform_metadata(operation="syntax", resource="...") BEFORE writing Terraform config',
     },
     provider: {
       name: 'robinmordasiewicz/f5xc',
@@ -193,9 +188,7 @@ function buildJsonResponse(tools: ToolInfo[], verbose: boolean): DiscoverRespons
     }),
     total_tools: tools.length,
     token_estimate: verbose ? '~2,000 tokens' : '~150 tokens',
-    usage_hint: verbose
-      ? 'Full schemas included for reference'
-      : 'Use verbose=true for full schemas',
+    usage_hint: verbose ? 'Full schemas included for reference' : 'Use verbose=true for full schemas',
   };
 }
 

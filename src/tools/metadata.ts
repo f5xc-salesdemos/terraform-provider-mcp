@@ -9,7 +9,7 @@
  * Includes OneOf groups, validation patterns, defaults, and attribute information.
  */
 
-import { MetadataInput } from '../schemas/common.js';
+import type { MetadataInput } from '../schemas/common.js';
 import { ResponseFormat } from '../types.js';
 import {
   getResourceMetadata,
@@ -21,7 +21,6 @@ import {
   getValidationPattern,
   getAllValidationPatterns,
   listResourcesWithMetadata,
-  getMetadataSummary as _getMetadataSummary,
   isMetadataAvailable,
   getResourceTier,
   getResourcesByTier,
@@ -35,8 +34,6 @@ import {
   getEnhancedMetadataSummary,
   getAttributeSyntaxGuidance,
   generateTerraformSyntaxGuide,
-  validateConfigurationSyntax as _validateConfigurationSyntax,
-  getOneOfGroupsQuickReference as _getOneOfGroupsQuickReference,
   loadResourceMetadata,
   type ResourceMetadata,
 } from '../services/metadata.js';
@@ -105,11 +102,7 @@ function handleOneOf(input: MetadataInput, format: ResponseFormat): string {
   const { resource } = input;
 
   if (!resource) {
-    return formatError(
-      'Missing parameter',
-      'resource parameter is required for oneof operation',
-      format,
-    );
+    return formatError('Missing parameter', 'resource parameter is required for oneof operation', format);
   }
 
   const oneOfGroups = getResourceOneOfGroups(resource);
@@ -199,12 +192,7 @@ function handleValidation(input: MetadataInput, format: ResponseFormat): string 
       );
     }
 
-    const lines: string[] = [
-      `# Validation Pattern: ${pattern}`,
-      '',
-      `**Type**: ${validationPattern.type}`,
-      '',
-    ];
+    const lines: string[] = [`# Validation Pattern: ${pattern}`, '', `**Type**: ${validationPattern.type}`, ''];
 
     if (validationPattern.pattern) {
       lines.push(`**Pattern**: \`${validationPattern.pattern}\``);
@@ -252,7 +240,12 @@ function handleValidation(input: MetadataInput, format: ResponseFormat): string 
     );
   }
 
-  const lines: string[] = ['# Validation Patterns', '', '| Pattern | Type | Description |', '|---------|------|-------------|'];
+  const lines: string[] = [
+    '# Validation Patterns',
+    '',
+    '| Pattern | Type | Description |',
+    '|---------|------|-------------|',
+  ];
 
   for (const [name, pat] of Object.entries(allPatterns)) {
     lines.push(`| ${name} | ${pat.type} | ${pat.description.slice(0, 50)}... |`);
@@ -268,21 +261,13 @@ function handleDefaults(input: MetadataInput, format: ResponseFormat): string {
   const { resource } = input;
 
   if (!resource) {
-    return formatError(
-      'Missing parameter',
-      'resource parameter is required for defaults operation',
-      format,
-    );
+    return formatError('Missing parameter', 'resource parameter is required for defaults operation', format);
   }
 
   const defaults = getAttributesWithDefaults(resource);
 
   if (Object.keys(defaults).length === 0) {
-    return formatNoData(
-      'No defaults found',
-      `Resource '${resource}' has no attributes with default values.`,
-      format,
-    );
+    return formatNoData('No defaults found', `Resource '${resource}' has no attributes with default values.`, format);
   }
 
   if (format === ResponseFormat.JSON) {
@@ -319,21 +304,13 @@ function handleEnums(input: MetadataInput, format: ResponseFormat): string {
   const { resource } = input;
 
   if (!resource) {
-    return formatError(
-      'Missing parameter',
-      'resource parameter is required for enums operation',
-      format,
-    );
+    return formatError('Missing parameter', 'resource parameter is required for enums operation', format);
   }
 
   const enums = getAttributesWithEnums(resource);
 
   if (Object.keys(enums).length === 0) {
-    return formatNoData(
-      'No enums found',
-      `Resource '${resource}' has no attributes with enum constraints.`,
-      format,
-    );
+    return formatNoData('No enums found', `Resource '${resource}' has no attributes with enum constraints.`, format);
   }
 
   if (format === ResponseFormat.JSON) {
@@ -349,17 +326,12 @@ function handleEnums(input: MetadataInput, format: ResponseFormat): string {
     );
   }
 
-  const lines: string[] = [
-    `# Enum Constraints: ${resource}`,
-    '',
-    'These attributes only accept specific values:',
-    '',
-  ];
+  const lines: string[] = [`# Enum Constraints: ${resource}`, '', 'These attributes only accept specific values:', ''];
 
   for (const [name, values] of Object.entries(enums)) {
     lines.push(`## ${name}`);
     lines.push('');
-    lines.push(`**Valid values**: ${values.map(v => `\`${v}\``).join(', ')}`);
+    lines.push(`**Valid values**: ${values.map((v) => `\`${v}\``).join(', ')}`);
     lines.push('');
   }
 
@@ -380,11 +352,7 @@ function handleAttribute(input: MetadataInput, format: ResponseFormat): string {
   const resourceMeta = getResourceMetadata(resource);
 
   if (!resourceMeta) {
-    return formatError(
-      'Resource not found',
-      `Resource '${resource}' not found in metadata`,
-      format,
-    );
+    return formatError('Resource not found', `Resource '${resource}' not found in metadata`, format);
   }
 
   const attrMeta = resourceMeta.attributes[attribute];
@@ -434,7 +402,7 @@ function handleAttribute(input: MetadataInput, format: ResponseFormat): string {
 
   if (attrMeta.enum && attrMeta.enum.length > 0) {
     lines.push('');
-    lines.push(`**Valid Values**: ${attrMeta.enum.map(v => `\`${v}\``).join(', ')}`);
+    lines.push(`**Valid Values**: ${attrMeta.enum.map((v) => `\`${v}\``).join(', ')}`);
   }
 
   if (attrMeta.default !== undefined) {
@@ -471,7 +439,7 @@ function handleAttribute(input: MetadataInput, format: ResponseFormat): string {
     lines.push('');
     lines.push('## Terraform Syntax');
     lines.push('');
-    lines.push('**Correct Syntax**: `' + syntaxGuidance.correctSyntax + '`');
+    lines.push(`**Correct Syntax**: \`${syntaxGuidance.correctSyntax}\``);
     lines.push('');
     lines.push('**Example**:');
     lines.push('```hcl');
@@ -482,7 +450,7 @@ function handleAttribute(input: MetadataInput, format: ResponseFormat): string {
     if (syntaxGuidance.isBlock) {
       lines.push('**Important**: This is a **block-type** attribute. Use block syntax, not assignment.');
       lines.push('');
-      lines.push('**Common Mistake**: `' + syntaxGuidance.incorrectSyntax.split('  #')[0].trim() + '`');
+      lines.push(`**Common Mistake**: \`${syntaxGuidance.incorrectSyntax.split('  #')[0].trim()}\``);
       lines.push('');
       lines.push(syntaxGuidance.incorrectSyntax);
     }
@@ -495,11 +463,7 @@ function handleRequiresReplace(input: MetadataInput, format: ResponseFormat): st
   const { resource } = input;
 
   if (!resource) {
-    return formatError(
-      'Missing parameter',
-      'resource parameter is required for requires_replace operation',
-      format,
-    );
+    return formatError('Missing parameter', 'resource parameter is required for requires_replace operation', format);
   }
 
   const attrs = getRequiresReplaceAttributes(resource);
@@ -598,11 +562,7 @@ function handleTier(input: MetadataInput, format: ResponseFormat): string {
     const resources = getResourcesByTier(tier);
 
     if (resources.length === 0) {
-      return formatNoData(
-        'No resources found',
-        `No resources found requiring tier '${tier}'.`,
-        format,
-      );
+      return formatNoData('No resources found', `No resources found requiring tier '${tier}'.`, format);
     }
 
     if (format === ResponseFormat.JSON) {
@@ -672,11 +632,7 @@ function handleDependencies(input: MetadataInput, format: ResponseFormat): strin
   const { resource } = input;
 
   if (!resource) {
-    return formatError(
-      'Missing parameter',
-      'resource parameter is required for dependencies operation',
-      format,
-    );
+    return formatError('Missing parameter', 'resource parameter is required for dependencies operation', format);
   }
 
   const dependencies = getResourceDependencies(resource);
@@ -988,11 +944,7 @@ function handleSyntax(input: MetadataInput, format: ResponseFormat): string {
   const { resource, attribute } = input;
 
   if (!resource) {
-    return formatError(
-      'Missing parameter',
-      'resource parameter is required for syntax operation',
-      format,
-    );
+    return formatError('Missing parameter', 'resource parameter is required for syntax operation', format);
   }
 
   // If attribute specified, return guidance for that specific attribute
@@ -1000,11 +952,7 @@ function handleSyntax(input: MetadataInput, format: ResponseFormat): string {
     const guidance = getAttributeSyntaxGuidance(resource, attribute);
 
     if (!guidance) {
-      return formatError(
-        'Attribute not found',
-        `Attribute '${attribute}' not found in resource '${resource}'`,
-        format,
-      );
+      return formatError('Attribute not found', `Attribute '${attribute}' not found in resource '${resource}'`, format);
     }
 
     if (format === ResponseFormat.JSON) {
@@ -1060,11 +1008,7 @@ function handleSyntax(input: MetadataInput, format: ResponseFormat): string {
   const guide = generateTerraformSyntaxGuide(resource);
 
   if (!guide) {
-    return formatError(
-      'Resource not found',
-      `Resource '${resource}' not found in metadata`,
-      format,
-    );
+    return formatError('Resource not found', `Resource '${resource}' not found in metadata`, format);
   }
 
   if (format === ResponseFormat.JSON) {
@@ -1112,11 +1056,7 @@ function handleValidate(input: MetadataInput, format: ResponseFormat): string {
   const { resource, config } = input;
 
   if (!resource) {
-    return formatError(
-      'Missing parameter',
-      'resource parameter is required for validate operation',
-      format,
-    );
+    return formatError('Missing parameter', 'resource parameter is required for validate operation', format);
   }
 
   if (!config) {
@@ -1129,11 +1069,7 @@ function handleValidate(input: MetadataInput, format: ResponseFormat): string {
 
   const resourceMeta = getResourceMetadata(resource);
   if (!resourceMeta) {
-    return formatError(
-      'Resource not found',
-      `Resource '${resource}' not found in metadata`,
-      format,
-    );
+    return formatError('Resource not found', `Resource '${resource}' not found in metadata`, format);
   }
 
   const errors: ValidationError[] = [];
@@ -1141,14 +1077,16 @@ function handleValidate(input: MetadataInput, format: ResponseFormat): string {
 
   // Phase 1: Check for boolean assignment errors (existing)
   const booleanAssignmentPattern = /^\s*(\w+)\s*=\s*(true|false)\s*$/gm;
-  let match;
-
-  while ((match = booleanAssignmentPattern.exec(config)) !== null) {
+  for (
+    let match = booleanAssignmentPattern.exec(config);
+    match !== null;
+    match = booleanAssignmentPattern.exec(config)
+  ) {
     const fieldName = match[1];
     const value = match[2];
 
     const attrMeta = resourceMeta.attributes[fieldName];
-    if (attrMeta && attrMeta.is_block && attrMeta.type === 'object') {
+    if (attrMeta?.is_block && attrMeta.type === 'object') {
       errors.push({
         type: 'boolean_assignment',
         field: fieldName,
@@ -1238,13 +1176,17 @@ function handleValidate(input: MetadataInput, format: ResponseFormat): string {
   // Build response
   if (errors.length === 0) {
     if (format === ResponseFormat.JSON) {
-      return JSON.stringify({
-        operation: 'validate',
-        resource,
-        status: 'valid',
-        errors: [],
-        message: 'No syntax errors detected in the provided configuration.',
-      }, null, 2);
+      return JSON.stringify(
+        {
+          operation: 'validate',
+          resource,
+          status: 'valid',
+          errors: [],
+          message: 'No syntax errors detected in the provided configuration.',
+        },
+        null,
+        2,
+      );
     }
 
     return [
@@ -1260,19 +1202,20 @@ function handleValidate(input: MetadataInput, format: ResponseFormat): string {
 
   // Errors found
   if (format === ResponseFormat.JSON) {
-    return JSON.stringify({
-      operation: 'validate',
-      resource,
-      status: 'invalid',
-      errors,
-      error_count: errors.length,
-    }, null, 2);
+    return JSON.stringify(
+      {
+        operation: 'validate',
+        resource,
+        status: 'invalid',
+        errors,
+        error_count: errors.length,
+      },
+      null,
+      2,
+    );
   }
 
-  const lines: string[] = [
-    `# Validation Results: ${errors.length} Error(s) Found`,
-    '',
-  ];
+  const lines: string[] = [`# Validation Results: ${errors.length} Error(s) Found`, ''];
 
   for (let i = 0; i < errors.length; i++) {
     const err = errors[i];
@@ -1296,11 +1239,13 @@ function handleValidate(input: MetadataInput, format: ResponseFormat): string {
   }
 
   // Add corrected pattern for reference block errors
-  const refErrors = errors.filter(e => e.type === 'reference_inline' || (e.type === 'unsupported_block' && e.referenceResource));
+  const refErrors = errors.filter(
+    (e) => e.type === 'reference_inline' || (e.type === 'unsupported_block' && e.referenceResource),
+  );
   if (refErrors.length > 0) {
-    const refErr = refErrors[0];
-    const parentBlock = refErr.location?.match(/`(\w+)`/)?.[1] || 'unknown';
-    const refResource = refErr.referenceResource || `f5xc_${parentBlock}`;
+    const firstRefError = refErrors[0];
+    const parentBlock = firstRefError.location?.match(/`(\w+)`/)?.[1] || 'unknown';
+    const refResource = firstRefError.referenceResource || `f5xc_${parentBlock}`;
 
     lines.push('## Correct Pattern');
     lines.push('');
@@ -1324,7 +1269,7 @@ function handleValidate(input: MetadataInput, format: ResponseFormat): string {
     lines.push('```');
   } else {
     // For non-reference errors, show corrected config
-    const boolErrors = errors.filter(e => e.type === 'boolean_assignment');
+    const boolErrors = errors.filter((e) => e.type === 'boolean_assignment');
     if (boolErrors.length > 0) {
       lines.push('## Corrected Configuration');
       lines.push('');
@@ -1358,10 +1303,7 @@ function getErrorTitle(type: ValidationError['type']): string {
 /**
  * Generates corrected config by replacing boolean assignments with empty blocks
  */
-function generateCorrectedConfig(
-  config: string,
-  errors: ValidationError[],
-): string {
+function generateCorrectedConfig(config: string, errors: ValidationError[]): string {
   let corrected = config;
   for (const err of errors) {
     if (err.type === 'boolean_assignment') {
@@ -1384,11 +1326,7 @@ function handleExample(input: MetadataInput, format: ResponseFormat): string {
   const { resource, pattern = 'basic' } = input;
 
   if (!resource) {
-    return formatError(
-      'Missing parameter',
-      'resource parameter is required for example operation',
-      format,
-    );
+    return formatError('Missing parameter', 'resource parameter is required for example operation', format);
   }
 
   // Get example based on resource type and pattern
@@ -1403,12 +1341,16 @@ function handleExample(input: MetadataInput, format: ResponseFormat): string {
   }
 
   if (format === ResponseFormat.JSON) {
-    return JSON.stringify({
-      operation: 'example',
-      resource,
-      pattern,
-      ...example,
-    }, null, 2);
+    return JSON.stringify(
+      {
+        operation: 'example',
+        resource,
+        pattern,
+        ...example,
+      },
+      null,
+      2,
+    );
   }
 
   return example.markdown;
@@ -1485,7 +1427,7 @@ function getExampleForResource(
 
     const exampleLines = [
       `resource "f5xc_${resource}" "example" {`,
-      '  name      = "example-' + resource.replace(/_/g, '-') + '"',
+      `  name      = "example-${resource.replace(/_/g, '-')}"`,
       '  namespace = "default"',
       '',
     ];
@@ -1515,11 +1457,11 @@ function getExampleForResource(
         '',
         '## Block-Type Attributes (use empty block syntax)',
         '',
-        blocks.map(b => `- \`${b} {}\``).join('\n'),
+        blocks.map((b) => `- \`${b} {}\``).join('\n'),
         '',
         '## Simple Attributes',
         '',
-        attrs.map(a => `- \`${a} = <value>\``).join('\n'),
+        attrs.map((a) => `- \`${a} = <value>\``).join('\n'),
       ].join('\n'),
     };
   }
@@ -1662,7 +1604,7 @@ function getCertificateExample(pattern: string): { markdown: string; terraform: 
   namespace = "default"
 
   # Certificate data in PEM format (replace with actual certificate)
-  certificate_url = "string:///-----BEGIN CERTIFICATE-----\\nMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJRTESMBAGA1UEChMJQmFsdGltb3JlMRMwEQYDVQQLEwpDeWJlclRydXN0MSIwIAYDVQQDExlCYWx0aW1vcmUgQ3liZXJUcnVzdCBSb290MB4XDTAwMDUxMjE4NDYwMFoXDTI1MDUxMjIzNTkwMFowWjELMAkGA1UEBhMCSUUxEjAQBgNVBAoTCUJhbHRpbW9yZTETMBEGA1UECxMKQ3liZXJUcnVzdDEiMCAGA1UEAxMZQmFsdGltb3JlIEN5YmVyVHJ1c3QgUm9vdDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKMEuyKrmD1X6CZymrV51Cni4eiVgLGw41uOKymaZN+hXe2wCQVt2yguzmKiYv60iNoS6zjrIZ3AQSsBUnuId9Mcj8e6uYi1agnnc+gRQKfRzMpijS3ljwumUNKoUMMo6vWrJYeKmpYcqWe4PwzV9\/lSEy\/CG9VwcPCPwBLKBsua4dnKM3p31vjsufFoREJIE9LAwqSuXmD+tqYF\/LTdB1kC1FkYmGP1pWPgkAx9XbIGevOF6uvUA65ehD5f\/xXtabz5OTZydc93Uk3zyZAsuT3lySNTPx8kmCFcB5kpvcY67Oduhjprl3RjM71oGDHweI12v\/yejl0qhqdNkNwnGjkCAwEAAaNFMEMwHQYDVR0OBBYEFOWdWTCCR1jMrPoIVDaGezq1BE3wMBIGA1UdEwEB\/wQIMAYBAf8CAQMwDgYDVR0PAQH\/BAQDAgEGMA0GCSqGSIb3DQEBBQUAA4IBAQCFDF2O5G9RaEIFoN27TyclhAO992T9Ldcw46QQF+vaKSm2eT929hkTI7gQCvlYpNRhcL0EYWoSihfVCr3FvDB81ukMJY2GQE\/szKN+OMY3EU\/t3WgxjkzSswF07r51XgdIGn9w\/xZchMB5hbgF\/X++ZRGjD8ACtPhSNzkE1akxehi\/oCr0Epn3o0WC4zxe9Z2etciefC7IpJ5OCBRLbf1wbWsaY71k5h+3zvDyny67G7fyUIhzksLi4xaNmjICq44Y3ekQEe5+NauQrz4wlHrQMz2nZQ\/1\/I6eYs9HRCwBXbsdtTLSR9I4LtD+gdwyah617jzV\/OeBHRnDJELqYzmp\\n-----END CERTIFICATE-----"
+  certificate_url = "string:///-----BEGIN CERTIFICATE-----\\nMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJRTESMBAGA1UEChMJQmFsdGltb3JlMRMwEQYDVQQLEwpDeWJlclRydXN0MSIwIAYDVQQDExlCYWx0aW1vcmUgQ3liZXJUcnVzdCBSb290MB4XDTAwMDUxMjE4NDYwMFoXDTI1MDUxMjIzNTkwMFowWjELMAkGA1UEBhMCSUUxEjAQBgNVBAoTCUJhbHRpbW9yZTETMBEGA1UECxMKQ3liZXJUcnVzdDEiMCAGA1UEAxMZQmFsdGltb3JlIEN5YmVyVHJ1c3QgUm9vdDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKMEuyKrmD1X6CZymrV51Cni4eiVgLGw41uOKymaZN+hXe2wCQVt2yguzmKiYv60iNoS6zjrIZ3AQSsBUnuId9Mcj8e6uYi1agnnc+gRQKfRzMpijS3ljwumUNKoUMMo6vWrJYeKmpYcqWe4PwzV9/lSEy/CG9VwcPCPwBLKBsua4dnKM3p31vjsufFoREJIE9LAwqSuXmD+tqYF/LTdB1kC1FkYmGP1pWPgkAx9XbIGevOF6uvUA65ehD5f/xXtabz5OTZydc93Uk3zyZAsuT3lySNTPx8kmCFcB5kpvcY67Oduhjprl3RjM71oGDHweI12v/yejl0qhqdNkNwnGjkCAwEAAaNFMEMwHQYDVR0OBBYEFOWdWTCCR1jMrPoIVDaGezq1BE3wMBIGA1UdEwEB/wQIMAYBAf8CAQMwDgYDVR0PAQH/BAQDAgEGMA0GCSqGSIb3DQEBBQUAA4IBAQCFDF2O5G9RaEIFoN27TyclhAO992T9Ldcw46QQF+vaKSm2eT929hkTI7gQCvlYpNRhcL0EYWoSihfVCr3FvDB81ukMJY2GQE/szKN+OMY3EU/t3WgxjkzSswF07r51XgdIGn9w/xZchMB5hbgF/X++ZRGjD8ACtPhSNzkE1akxehi/oCr0Epn3o0WC4zxe9Z2etciefC7IpJ5OCBRLbf1wbWsaY71k5h+3zvDyny67G7fyUIhzksLi4xaNmjICq44Y3ekQEe5+NauQrz4wlHrQMz2nZQ/1/I6eYs9HRCwBXbsdtTLSR9I4LtD+gdwyah617jzV/OeBHRnDJELqYzmp\\n-----END CERTIFICATE-----"
 }`;
 
   if (pattern === 'basic') {
@@ -1942,7 +1884,7 @@ resource "f5xc_origin_pool" "example" {
       '',
       '### port_choice',
       '- `automatic_port {}` - Auto-select based on TLS (use empty block)',
-      '- `same_as_endpoint_port {}` - Use endpoint\'s port (use empty block)',
+      "- `same_as_endpoint_port {}` - Use endpoint's port (use empty block)",
       '- `port = 8080` - Explicit port (use attribute assignment)',
       '',
       '## Key Syntax Pattern',
@@ -2023,18 +1965,19 @@ function handleMistakes(input: MetadataInput, format: ResponseFormat): string {
   const mistakes = getCommonMistakes(resource);
 
   if (format === ResponseFormat.JSON) {
-    return JSON.stringify({
-      operation: 'mistakes',
-      resource: resource || 'all',
-      mistakes,
-      total: mistakes.length,
-    }, null, 2);
+    return JSON.stringify(
+      {
+        operation: 'mistakes',
+        resource: resource || 'all',
+        mistakes,
+        total: mistakes.length,
+      },
+      null,
+      2,
+    );
   }
 
-  const lines: string[] = [
-    '# Common Terraform Syntax Mistakes for F5XC Provider',
-    '',
-  ];
+  const lines: string[] = ['# Common Terraform Syntax Mistakes for F5XC Provider', ''];
 
   if (resource) {
     lines.push(`**Resource**: ${resource}`);
@@ -2093,8 +2036,10 @@ advertise_on_public_default_vip {}
 round_robin {}
 disable_api_definition {}
 no_challenge {}`,
-      explanation: 'OneOf choice fields in F5XC provider are modeled as blocks, not booleans. Use empty block syntax {} to select an option.',
-      detection: 'Query f5xc_terraform_metadata(operation="syntax", resource="...") and check "Block-Type Attributes" section.',
+      explanation:
+        'OneOf choice fields in F5XC provider are modeled as blocks, not booleans. Use empty block syntax {} to select an option.',
+      detection:
+        'Query f5xc_terraform_metadata(operation="syntax", resource="...") and check "Block-Type Attributes" section.',
       resources: ['http_loadbalancer', 'origin_pool', 'tcp_loadbalancer', 'app_firewall'],
     },
     {
@@ -2116,7 +2061,8 @@ no_challenge {}`,
     http_redirect = true
   }
 }`,
-      explanation: 'Some OneOf groups have a required selection. For http_loadbalancer, you must specify http {}, https {}, or https_auto_cert {}.',
+      explanation:
+        'Some OneOf groups have a required selection. For http_loadbalancer, you must specify http {}, https {}, or https_auto_cert {}.',
       detection: 'Query f5xc_terraform_metadata(operation="oneof", resource="...") to see required OneOf groups.',
       resources: ['http_loadbalancer'],
     },
@@ -2136,8 +2082,10 @@ loadbalancer_algorithm = "ROUND_ROBIN"
 
 # hash_policy_choice uses blocks for stickiness
 round_robin {}  # OR source_ip_stickiness {} etc.`,
-      explanation: 'Not all similarly-named fields work the same way. Some are simple attributes (use =), others are blocks (use {}).',
-      detection: 'Query f5xc_terraform_metadata(operation="attribute", resource="...", attribute="...") to check the type.',
+      explanation:
+        'Not all similarly-named fields work the same way. Some are simple attributes (use =), others are blocks (use {}).',
+      detection:
+        'Query f5xc_terraform_metadata(operation="attribute", resource="...", attribute="...") to check the type.',
       resources: ['origin_pool', 'http_loadbalancer'],
     },
     {
@@ -2217,9 +2165,7 @@ Or use f5xc_terraform_metadata(operation="validate", resource="origin_pool", con
 
   // Filter by resource if specified
   if (resource) {
-    return allMistakes.filter(m =>
-      !m.resources || m.resources.includes(resource),
-    );
+    return allMistakes.filter((m) => !m.resources || m.resources.includes(resource));
   }
 
   return allMistakes;
@@ -2237,21 +2183,13 @@ function handleMinimumConfig(input: MetadataInput, format: ResponseFormat): stri
   const { resource } = input;
 
   if (!resource) {
-    return formatError(
-      'Missing parameter',
-      'resource parameter is required for minimum_config operation',
-      format,
-    );
+    return formatError('Missing parameter', 'resource parameter is required for minimum_config operation', format);
   }
 
   const resourceMeta = getResourceMetadata(resource);
 
   if (!resourceMeta) {
-    return formatError(
-      'Resource not found',
-      `Resource '${resource}' not found in metadata`,
-      format,
-    );
+    return formatError('Resource not found', `Resource '${resource}' not found in metadata`, format);
   }
 
   // Analyze attributes to categorize them
@@ -2307,12 +2245,7 @@ function handleMinimumConfig(input: MetadataInput, format: ResponseFormat): stri
   }
 
   // Markdown format
-  const lines: string[] = [
-    `# Minimum Configuration: ${resource}`,
-    '',
-    '## Required Fields',
-    '',
-  ];
+  const lines: string[] = [`# Minimum Configuration: ${resource}`, '', '## Required Fields', ''];
 
   if (trulyRequired.length === 0) {
     lines.push('*No strictly required fields (all have server defaults)*');
@@ -2376,14 +2309,8 @@ function handleMinimumConfig(input: MetadataInput, format: ResponseFormat): stri
 /**
  * Generate a minimal Terraform configuration example
  */
-function generateMinimalExample(
-  resource: string,
-  requiredFields: string[],
-  resourceMeta: ResourceMetadata,
-): string {
-  const lines: string[] = [
-    `resource "f5xc_${resource}" "example" {`,
-  ];
+function generateMinimalExample(resource: string, requiredFields: string[], resourceMeta: ResourceMetadata): string {
+  const lines: string[] = [`resource "f5xc_${resource}" "example" {`];
 
   // Add required fields with example values
   for (const field of requiredFields) {
@@ -2403,7 +2330,6 @@ function generateMinimalExample(
     } else if (attr.type === 'bool') {
       value = 'true';
     } else if (attr.is_block) {
-      value = '{}';
       lines.push('');
       lines.push(`  ${field} {}`);
       continue;
@@ -2444,8 +2370,8 @@ interface ParsedField {
   name: string;
   type: 'attribute' | 'block';
   line: number;
-  parent?: string;  // Parent block name if nested
-  value?: string;   // For attributes, the assigned value
+  parent?: string; // Parent block name if nested
+  value?: string; // For attributes, the assigned value
 }
 
 interface ParsedBlock {
@@ -2486,7 +2412,9 @@ function parseHCLForFields(hcl: string): { fields: ParsedField[]; blocks: Parsed
       const blockName = blockMatch[1];
       const inlineContent = blockMatch[2] || '';
       // Skip resource/data/provider/variable declarations
-      if (!['resource', 'data', 'provider', 'variable', 'output', 'locals', 'terraform', 'module'].includes(blockName)) {
+      if (
+        !['resource', 'data', 'provider', 'variable', 'output', 'locals', 'terraform', 'module'].includes(blockName)
+      ) {
         const parent = blockStack.length > 0 ? blockStack[blockStack.length - 1].name : undefined;
         blocks.push({
           name: blockName,
@@ -2654,7 +2582,7 @@ const KNOWN_REFERENCE_BLOCKS = new Set([
   'slo_to_global_dr',
 
   // Nested reference blocks (commonly found inside other blocks)
-  'policies',  // inside active_service_policies
+  'policies', // inside active_service_policies
 ]);
 
 /**
@@ -2690,11 +2618,14 @@ const REFERENCE_DESCRIPTION_PATTERNS = [
  * This function is critical for preventing AI trial-and-error by correctly
  * identifying blocks that ONLY accept name/namespace/tenant.
  */
-function isReferenceBlock(attrMeta: {
-  type: string;
-  is_block?: boolean;
-  description?: string;
-}, fieldName?: string): boolean {
+function isReferenceBlock(
+  attrMeta: {
+    type: string;
+    is_block?: boolean;
+    description?: string;
+  },
+  fieldName?: string,
+): boolean {
   // Strategy 1: Check if it's a known reference block (most reliable)
   if (fieldName && KNOWN_REFERENCE_BLOCKS.has(fieldName)) {
     return true;
@@ -2726,7 +2657,9 @@ function levenshteinDistance(str1: string, str2: string): number {
   const n = str2.length;
 
   // Create distance matrix
-  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  const dp: number[][] = Array(m + 1)
+    .fill(null)
+    .map(() => Array(n + 1).fill(0));
 
   // Initialize base cases
   for (let i = 0; i <= m; i++) dp[i][0] = i;
@@ -2738,11 +2671,13 @@ function levenshteinDistance(str1: string, str2: string): number {
       if (str1[i - 1] === str2[j - 1]) {
         dp[i][j] = dp[i - 1][j - 1];
       } else {
-        dp[i][j] = 1 + Math.min(
-          dp[i - 1][j],     // deletion
-          dp[i][j - 1],     // insertion
-          dp[i - 1][j - 1], // substitution
-        );
+        dp[i][j] =
+          1 +
+          Math.min(
+            dp[i - 1][j], // deletion
+            dp[i][j - 1], // insertion
+            dp[i - 1][j - 1], // substitution
+          );
       }
     }
   }
@@ -2755,11 +2690,11 @@ function levenshteinDistance(str1: string, str2: string): number {
  */
 function findSimilarFieldNames(typo: string, validFields: string[], maxDistance: number = 3): string[] {
   return validFields
-    .map(f => ({ field: f, distance: levenshteinDistance(typo.toLowerCase(), f.toLowerCase()) }))
-    .filter(x => x.distance <= maxDistance && x.distance > 0)
+    .map((f) => ({ field: f, distance: levenshteinDistance(typo.toLowerCase(), f.toLowerCase()) }))
+    .filter((x) => x.distance <= maxDistance && x.distance > 0)
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 3)
-    .map(x => x.field);
+    .map((x) => x.field);
 }
 
 /**
@@ -2770,61 +2705,61 @@ function getReferenceResourceName(fieldName: string): string {
   // Comprehensive reference field mappings
   const mappings: Record<string, string> = {
     // Security resources
-    'app_firewall': 'f5xc_app_firewall',
-    'waf': 'f5xc_app_firewall',
-    'bot_defense_policy': 'f5xc_bot_defense_policy',
-    'malicious_user_mitigation': 'f5xc_malicious_user_mitigation',
-    'usb_policy': 'f5xc_usb_policy',
+    app_firewall: 'f5xc_app_firewall',
+    waf: 'f5xc_app_firewall',
+    bot_defense_policy: 'f5xc_bot_defense_policy',
+    malicious_user_mitigation: 'f5xc_malicious_user_mitigation',
+    usb_policy: 'f5xc_usb_policy',
 
     // Load balancer and pool resources
-    'healthcheck': 'f5xc_healthcheck',
-    'origin_pool': 'f5xc_origin_pool',
-    'pool': 'f5xc_origin_pool',
-    'cluster': 'f5xc_cluster',
+    healthcheck: 'f5xc_healthcheck',
+    origin_pool: 'f5xc_origin_pool',
+    pool: 'f5xc_origin_pool',
+    cluster: 'f5xc_cluster',
 
     // Policy resources
-    'service_policy': 'f5xc_service_policy',
-    'policies': 'f5xc_service_policy',
-    'rate_limiter': 'f5xc_rate_limiter',
-    'policer': 'f5xc_policer',
+    service_policy: 'f5xc_service_policy',
+    policies: 'f5xc_service_policy',
+    rate_limiter: 'f5xc_rate_limiter',
+    policer: 'f5xc_policer',
 
     // Identity resources
-    'user_identification': 'f5xc_user_identification',
-    'authentication': 'f5xc_authentication',
+    user_identification: 'f5xc_user_identification',
+    authentication: 'f5xc_authentication',
 
     // API resources
-    'api_definition': 'f5xc_api_definition',
-    'api_definitions': 'f5xc_api_definition',
+    api_definition: 'f5xc_api_definition',
+    api_definitions: 'f5xc_api_definition',
 
     // Certificate resources
-    'certificate': 'f5xc_certificate',
-    'certificates': 'f5xc_certificate',
-    'crl': 'f5xc_crl',
-    'trusted_ca': 'f5xc_trusted_ca_list',
-    'trusted_ca_list': 'f5xc_trusted_ca_list',
+    certificate: 'f5xc_certificate',
+    certificates: 'f5xc_certificate',
+    crl: 'f5xc_crl',
+    trusted_ca: 'f5xc_trusted_ca_list',
+    trusted_ca_list: 'f5xc_trusted_ca_list',
 
     // Infrastructure resources
-    'site': 'f5xc_site',
-    'virtual_site': 'f5xc_virtual_site',
-    'virtual_network': 'f5xc_virtual_network',
-    'segment': 'f5xc_segment',
-    'network_connector': 'f5xc_network_connector',
-    'cloud_credentials': 'f5xc_cloud_credentials',
-    'aws_cred': 'f5xc_cloud_credentials',
-    'azure_cred': 'f5xc_cloud_credentials',
-    'gcp_cred': 'f5xc_cloud_credentials',
-    'k8s_cluster': 'f5xc_cluster',
-    'log_receiver': 'f5xc_log_receiver',
+    site: 'f5xc_site',
+    virtual_site: 'f5xc_virtual_site',
+    virtual_network: 'f5xc_virtual_network',
+    segment: 'f5xc_segment',
+    network_connector: 'f5xc_network_connector',
+    cloud_credentials: 'f5xc_cloud_credentials',
+    aws_cred: 'f5xc_cloud_credentials',
+    azure_cred: 'f5xc_cloud_credentials',
+    gcp_cred: 'f5xc_cloud_credentials',
+    k8s_cluster: 'f5xc_cluster',
+    log_receiver: 'f5xc_log_receiver',
 
     // Site group resources
-    'dc_cluster_group': 'f5xc_dc_cluster_group',
-    'dc_cluster_group_inside': 'f5xc_dc_cluster_group',
-    'dc_cluster_group_sli': 'f5xc_dc_cluster_group',
-    'dc_cluster_group_slo': 'f5xc_dc_cluster_group',
+    dc_cluster_group: 'f5xc_dc_cluster_group',
+    dc_cluster_group_inside: 'f5xc_dc_cluster_group',
+    dc_cluster_group_sli: 'f5xc_dc_cluster_group',
+    dc_cluster_group_slo: 'f5xc_dc_cluster_group',
 
     // IP/Prefix resources
-    'ip_prefix_set': 'f5xc_ip_prefix_set',
-    'public_ip': 'f5xc_cloud_elastic_ip',
+    ip_prefix_set: 'f5xc_ip_prefix_set',
+    public_ip: 'f5xc_cloud_elastic_ip',
   };
 
   return mappings[fieldName] || `f5xc_${fieldName}`;
@@ -2836,5 +2771,6 @@ function getReferenceResourceName(fieldName: string): string {
 
 export const METADATA_TOOL_DEFINITION = {
   name: 'f5xc_terraform_metadata',
-  description: 'Query resource metadata for deterministic Terraform configuration generation. Operations: minimum_config (minimal required fields with recommended values), oneof (mutually exclusive fields), validation (regex/range patterns), defaults, enums, attribute (full metadata), requires_replace, tier (subscription requirements), dependencies (creation order), troubleshoot (error remediation), syntax (correct Terraform block vs attribute syntax), validate (check config for syntax errors), example (generate complete working examples), mistakes (common errors and fixes), summary.',
+  description:
+    'Query resource metadata for deterministic Terraform configuration generation. Operations: minimum_config (minimal required fields with recommended values), oneof (mutually exclusive fields), validation (regex/range patterns), defaults, enums, attribute (full metadata), requires_replace, tier (subscription requirements), dependencies (creation order), troubleshoot (error remediation), syntax (correct Terraform block vs attribute syntax), validate (check config for syntax errors), example (generate complete working examples), mistakes (common errors and fixes), summary.',
 };

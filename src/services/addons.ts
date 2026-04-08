@@ -5,9 +5,8 @@
  * Provides information about F5 Distributed Cloud addon services and activation workflows
  */
 
-import { readFileSync as _readFileSync, existsSync as _existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Addon service information from subscription metadata
 const __filename = fileURLToPath(import.meta.url);
@@ -136,8 +135,8 @@ interface WorkflowStep {
  */
 function toTerraformResourceName(addonServiceName: string): string {
   return addonServiceName
-    .replace(/^f5xc-/, '')  // Remove f5xc- prefix
-    .replace(/-/g, '_');    // Replace hyphens with underscores
+    .replace(/^f5xc-/, '') // Remove f5xc- prefix
+    .replace(/-/g, '_'); // Replace hyphens with underscores
 }
 
 /**
@@ -145,21 +144,21 @@ function toTerraformResourceName(addonServiceName: string): string {
  */
 export function listAddonServices(
   tierFilter?: 'STANDARD' | 'ADVANCED' | 'PREMIUM',
-  activationTypeFilter?: 'self' | 'managed'
+  activationTypeFilter?: 'self' | 'managed',
 ): AddonListResult {
   let services = Object.values(ADDON_SERVICES);
 
   // Apply tier filter
   if (tierFilter) {
-    services = services.filter(s => s.tier === tierFilter);
+    services = services.filter((s) => s.tier === tierFilter);
   }
 
   // Apply activation type filter
   if (activationTypeFilter) {
     if (activationTypeFilter === 'managed') {
-      services = services.filter(s => s.activationType === 'managed' || s.activationType === 'partial');
+      services = services.filter((s) => s.activationType === 'managed' || s.activationType === 'partial');
     } else {
-      services = services.filter(s => s.activationType === activationTypeFilter);
+      services = services.filter((s) => s.activationType === activationTypeFilter);
     }
   }
 
@@ -250,7 +249,7 @@ resource "f5xc_addon_subscription" "${terraformResourceName}" {
  */
 export function getAddonWorkflow(
   addonService: string,
-  activationType?: 'self' | 'partial' | 'managed'
+  activationType?: 'self' | 'partial' | 'managed',
 ): AddonWorkflow | null {
   const service = ADDON_SERVICES[addonService];
 
@@ -456,8 +455,8 @@ data "f5xc_addon_service_activation_status" "${tfResourceName}" {
  * Generate a full Terraform configuration for an addon
  */
 function generateFullTerraformConfig(service: AddonServiceInfo, includeNotification = false): string {
-  const serviceName = service.name;  // Full API name like "f5xc-bot-defense-standard"
-  const resourceName = toTerraformResourceName(serviceName);  // Terraform-safe name like "bot_defense_standard"
+  const serviceName = service.name; // Full API name like "f5xc-bot-defense-standard"
+  const resourceName = toTerraformResourceName(serviceName); // Terraform-safe name like "bot_defense_standard"
 
   let config = `# ${service.displayName} Activation Configuration
 # Tier Required: ${service.tier}

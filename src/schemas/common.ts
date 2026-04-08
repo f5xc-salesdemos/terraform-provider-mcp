@@ -88,7 +88,7 @@ export function optimizeDescription(name: string, description: string): string {
   }
 
   // Truncate with ellipsis
-  return description.slice(0, 97) + '...';
+  return `${description.slice(0, 97)}...`;
 }
 
 // =============================================================================
@@ -98,7 +98,8 @@ export function optimizeDescription(name: string, description: string): string {
 /**
  * Response format schema - shared across all tools
  */
-export const ResponseFormatSchema = z.nativeEnum(ResponseFormat)
+export const ResponseFormatSchema = z
+  .nativeEnum(ResponseFormat)
   .default(ResponseFormat.MARKDOWN)
   .describe(COMMON_PARAM_DESCRIPTIONS.response_format);
 
@@ -125,193 +126,149 @@ export const SubscriptionTierEnum = z.enum(['STANDARD', 'ADVANCED', 'PREMIUM']);
  * Discovery meta-tool schema
  * Enables lazy loading of full tool schemas
  */
-export const DiscoverSchema = z.object({
-  category: z.enum(['docs', 'api', 'subscription', 'addon', 'all'])
-    .optional()
-    .default('all')
-    .describe('Filter tools by category'),
-  verbose: z.boolean()
-    .optional()
-    .default(false)
-    .describe(COMMON_PARAM_DESCRIPTIONS.verbose),
-  response_format: ResponseFormatSchema,
-}).strict();
+export const DiscoverSchema = z
+  .object({
+    category: z
+      .enum(['docs', 'api', 'subscription', 'addon', 'all'])
+      .optional()
+      .default('all')
+      .describe('Filter tools by category'),
+    verbose: z.boolean().optional().default(false).describe(COMMON_PARAM_DESCRIPTIONS.verbose),
+    response_format: ResponseFormatSchema,
+  })
+  .strict();
 
 /**
  * Consolidated documentation tool schema
  * Replaces: search_docs, get_doc, list_docs
  */
-export const DocsSchema = z.object({
-  operation: z.enum(['search', 'get', 'list'])
-    .describe(COMMON_PARAM_DESCRIPTIONS.operation),
-  query: z.string()
-    .min(1)
-    .max(200)
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.query),
-  name: z.string()
-    .min(1)
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.name),
-  type: DocTypeEnum
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.type),
-  limit: z.number()
-    .int()
-    .min(1)
-    .max(50)
-    .optional()
-    .default(20)
-    .describe(COMMON_PARAM_DESCRIPTIONS.limit),
-  response_format: ResponseFormatSchema,
-}).strict();
+export const DocsSchema = z
+  .object({
+    operation: z.enum(['search', 'get', 'list']).describe(COMMON_PARAM_DESCRIPTIONS.operation),
+    query: z.string().min(1).max(200).optional().describe(COMMON_PARAM_DESCRIPTIONS.query),
+    name: z.string().min(1).optional().describe(COMMON_PARAM_DESCRIPTIONS.name),
+    type: DocTypeEnum.optional().describe(COMMON_PARAM_DESCRIPTIONS.type),
+    limit: z.number().int().min(1).max(50).optional().default(20).describe(COMMON_PARAM_DESCRIPTIONS.limit),
+    response_format: ResponseFormatSchema,
+  })
+  .strict();
 
 /**
  * Consolidated API tool schema
  * Replaces: search_api_specs, get_api_spec, find_endpoints, get_schema_definition, list_definitions
  */
-export const ApiSchema = z.object({
-  operation: z.enum(['search', 'get', 'find_endpoints', 'get_definition', 'list_definitions'])
-    .describe(COMMON_PARAM_DESCRIPTIONS.operation),
-  query: z.string()
-    .min(1)
-    .max(200)
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.query),
-  pattern: z.string()
-    .min(1)
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.pattern),
-  name: z.string()
-    .min(1)
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.spec_name),
-  spec_name: z.string()
-    .min(1)
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.spec_name),
-  definition_name: z.string()
-    .min(1)
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.definition_name),
-  method: HttpMethodEnum
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.method),
-  include_paths: z.boolean()
-    .optional()
-    .default(true)
-    .describe(COMMON_PARAM_DESCRIPTIONS.include_paths),
-  include_definitions: z.boolean()
-    .optional()
-    .default(false)
-    .describe(COMMON_PARAM_DESCRIPTIONS.include_definitions),
-  limit: z.number()
-    .int()
-    .min(1)
-    .max(100)
-    .optional()
-    .default(20)
-    .describe(COMMON_PARAM_DESCRIPTIONS.limit),
-  response_format: ResponseFormatSchema,
-}).strict();
+export const ApiSchema = z
+  .object({
+    operation: z
+      .enum(['search', 'get', 'find_endpoints', 'get_definition', 'list_definitions'])
+      .describe(COMMON_PARAM_DESCRIPTIONS.operation),
+    query: z.string().min(1).max(200).optional().describe(COMMON_PARAM_DESCRIPTIONS.query),
+    pattern: z.string().min(1).optional().describe(COMMON_PARAM_DESCRIPTIONS.pattern),
+    name: z.string().min(1).optional().describe(COMMON_PARAM_DESCRIPTIONS.spec_name),
+    spec_name: z.string().min(1).optional().describe(COMMON_PARAM_DESCRIPTIONS.spec_name),
+    definition_name: z.string().min(1).optional().describe(COMMON_PARAM_DESCRIPTIONS.definition_name),
+    method: HttpMethodEnum.optional().describe(COMMON_PARAM_DESCRIPTIONS.method),
+    include_paths: z.boolean().optional().default(true).describe(COMMON_PARAM_DESCRIPTIONS.include_paths),
+    include_definitions: z.boolean().optional().default(false).describe(COMMON_PARAM_DESCRIPTIONS.include_definitions),
+    limit: z.number().int().min(1).max(100).optional().default(20).describe(COMMON_PARAM_DESCRIPTIONS.limit),
+    response_format: ResponseFormatSchema,
+  })
+  .strict();
 
 /**
  * Consolidated subscription tool schema
  * Replaces: get_subscription_info, get_property_subscription_info
  */
-export const SubscriptionSchema = z.object({
-  operation: z.enum(['resource', 'property'])
-    .describe(COMMON_PARAM_DESCRIPTIONS.operation),
-  resource_name: z.string()
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.resource_name),
-  property_path: z.string()
-    .optional()
-    .describe('Property path to check (e.g., "enable_malicious_user_detection")'),
-  tier: SubscriptionTierEnum
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.tier),
-  response_format: ResponseFormatSchema,
-}).strict();
+export const SubscriptionSchema = z
+  .object({
+    operation: z.enum(['resource', 'property']).describe(COMMON_PARAM_DESCRIPTIONS.operation),
+    resource_name: z.string().optional().describe(COMMON_PARAM_DESCRIPTIONS.resource_name),
+    property_path: z.string().optional().describe('Property path to check (e.g., "enable_malicious_user_detection")'),
+    tier: SubscriptionTierEnum.optional().describe(COMMON_PARAM_DESCRIPTIONS.tier),
+    response_format: ResponseFormatSchema,
+  })
+  .strict();
 
 /**
  * Consolidated addon tool schema
  * Replaces: addon_list_services, addon_check_activation, addon_activation_workflow
  */
-export const AddonSchema = z.object({
-  operation: z.enum(['list', 'check', 'workflow'])
-    .describe(COMMON_PARAM_DESCRIPTIONS.operation),
-  service_name: z.string()
-    .min(1)
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.service_name),
-  tier: SubscriptionTierEnum
-    .optional()
-    .describe(COMMON_PARAM_DESCRIPTIONS.tier),
-  activation_type: z.enum(['self', 'partial', 'managed'])
-    .optional()
-    .describe('Filter or override activation type'),
-  response_format: ResponseFormatSchema,
-}).strict();
+export const AddonSchema = z
+  .object({
+    operation: z.enum(['list', 'check', 'workflow']).describe(COMMON_PARAM_DESCRIPTIONS.operation),
+    service_name: z.string().min(1).optional().describe(COMMON_PARAM_DESCRIPTIONS.service_name),
+    tier: SubscriptionTierEnum.optional().describe(COMMON_PARAM_DESCRIPTIONS.tier),
+    activation_type: z.enum(['self', 'partial', 'managed']).optional().describe('Filter or override activation type'),
+    response_format: ResponseFormatSchema,
+  })
+  .strict();
 
 /**
  * Consolidated metadata tool schema
  * Provides access to resource metadata for deterministic AI configuration generation
  */
-export const MetadataSchema = z.object({
-  operation: z.enum(['oneof', 'validation', 'defaults', 'enums', 'attribute', 'requires_replace', 'tier', 'dependencies', 'troubleshoot', 'summary', 'syntax', 'validate', 'example', 'mistakes', 'minimum_config'])
-    .describe(COMMON_PARAM_DESCRIPTIONS.operation),
-  resource: z.string()
-    .min(1)
-    .optional()
-    .describe('Resource name (e.g., "http_loadbalancer", "namespace")'),
-  attribute: z.string()
-    .min(1)
-    .optional()
-    .describe('Attribute name for attribute operation'),
-  pattern: z.string()
-    .min(1)
-    .optional()
-    .describe('Validation pattern name (e.g., "name", "domain", "port") or example pattern (e.g., "basic", "with_waf", "full")'),
-  tier: SubscriptionTierEnum
-    .optional()
-    .describe('Filter resources by subscription tier'),
-  error_code: z.string()
-    .min(1)
-    .optional()
-    .describe('Error code for troubleshoot operation (e.g., "NOT_FOUND", "FORBIDDEN")'),
-  error_message: z.string()
-    .min(1)
-    .optional()
-    .describe('Error message pattern for troubleshoot operation'),
-  config: z.string()
-    .optional()
-    .describe('Terraform config snippet to validate (for validate operation)'),
-  response_format: ResponseFormatSchema,
-}).strict();
+export const MetadataSchema = z
+  .object({
+    operation: z
+      .enum([
+        'oneof',
+        'validation',
+        'defaults',
+        'enums',
+        'attribute',
+        'requires_replace',
+        'tier',
+        'dependencies',
+        'troubleshoot',
+        'summary',
+        'syntax',
+        'validate',
+        'example',
+        'mistakes',
+        'minimum_config',
+      ])
+      .describe(COMMON_PARAM_DESCRIPTIONS.operation),
+    resource: z.string().min(1).optional().describe('Resource name (e.g., "http_loadbalancer", "namespace")'),
+    attribute: z.string().min(1).optional().describe('Attribute name for attribute operation'),
+    pattern: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Validation pattern name (e.g., "name", "domain", "port") or example pattern (e.g., "basic", "with_waf", "full")',
+      ),
+    tier: SubscriptionTierEnum.optional().describe('Filter resources by subscription tier'),
+    error_code: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('Error code for troubleshoot operation (e.g., "NOT_FOUND", "FORBIDDEN")'),
+    error_message: z.string().min(1).optional().describe('Error message pattern for troubleshoot operation'),
+    config: z.string().optional().describe('Terraform config snippet to validate (for validate operation)'),
+    response_format: ResponseFormatSchema,
+  })
+  .strict();
 
 /**
  * Auth tool schema
  * Provides authentication status, profile management, credential validation,
  * and Terraform environment variable export
  */
-export const AuthSchema = z.object({
-  operation: z.enum(['status', 'list', 'switch', 'validate', 'terraform-env', 'terraform-block'])
-    .describe(COMMON_PARAM_DESCRIPTIONS.operation),
-  profile_name: z.string()
-    .min(1)
-    .optional()
-    .describe('Profile name to switch to (for switch operation)'),
-  output_type: z.enum(['shell', 'dotenv', 'json'])
-    .optional()
-    .default('shell')
-    .describe('Output format for terraform-env: shell exports, .env format, or JSON'),
-  mask_secrets: z.boolean()
-    .optional()
-    .default(false)
-    .describe('Mask sensitive values like tokens and passwords'),
-  response_format: ResponseFormatSchema,
-}).strict();
+export const AuthSchema = z
+  .object({
+    operation: z
+      .enum(['status', 'list', 'switch', 'validate', 'terraform-env', 'terraform-block'])
+      .describe(COMMON_PARAM_DESCRIPTIONS.operation),
+    profile_name: z.string().min(1).optional().describe('Profile name to switch to (for switch operation)'),
+    output_type: z
+      .enum(['shell', 'dotenv', 'json'])
+      .optional()
+      .default('shell')
+      .describe('Output format for terraform-env: shell exports, .env format, or JSON'),
+    mask_secrets: z.boolean().optional().default(false).describe('Mask sensitive values like tokens and passwords'),
+    response_format: ResponseFormatSchema,
+  })
+  .strict();
 
 // =============================================================================
 // TYPE EXPORTS

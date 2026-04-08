@@ -20,10 +20,10 @@
  *   1 - One or more validations failed
  */
 
-import { execSync, spawn } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { execSync, spawn } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -82,7 +82,7 @@ function logFailure(message: string): void {
   log(`  ❌ ${message}`, colors.red);
 }
 
-function logWarning(message: string): void {
+function _logWarning(message: string): void {
   log(`  ⚠️  ${message}`, colors.yellow);
 }
 
@@ -107,13 +107,18 @@ function exec(command: string, options: { cwd?: string; silent?: boolean } = {})
     return result || '';
   } catch (error) {
     if (error instanceof Error && 'stdout' in error) {
+      // biome-ignore lint/suspicious/noExplicitAny: error type from execSync
       return (error as any).stdout || '';
     }
     throw error;
   }
 }
 
-function execAsync(command: string, args: string[], cwd: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+function execAsync(
+  command: string,
+  args: string[],
+  cwd: string,
+): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   return new Promise((resolve) => {
     const proc = spawn(command, args, { cwd, shell: true });
     let stdout = '';
@@ -137,7 +142,7 @@ function execAsync(command: string, args: string[], cwd: string): Promise<{ stdo
 
 async function validate(
   name: string,
-  testFn: () => Promise<{ passed: boolean; message: string; details?: string }>
+  testFn: () => Promise<{ passed: boolean; message: string; details?: string }>,
 ): Promise<void> {
   logStep(name);
   const startTime = Date.now();
@@ -240,11 +245,7 @@ async function validateAuthImports(): Promise<{ passed: boolean; message: string
 
   const content = readFileSync(authToolPath, 'utf-8');
 
-  const requiredImports = [
-    'CredentialManager',
-    'AuthMode',
-    'getProfileManager',
-  ];
+  const requiredImports = ['CredentialManager', 'AuthMode', 'getProfileManager'];
 
   const missingImports = requiredImports.filter((imp) => !content.includes(imp));
 

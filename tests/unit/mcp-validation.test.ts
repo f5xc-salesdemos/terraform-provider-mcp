@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { MCPClient, createMCPClient } from '../utils/mcp-client.js';
+import { type MCPClient, createMCPClient } from '../utils/mcp-client.js';
 import { ResponseFormat } from '../../src/types.js';
 
 describe('MCP Validation Operation', () => {
@@ -118,9 +118,7 @@ resource "f5xc_http_loadbalancer" "test" {
 
       // The validate operation may report other issues (missing required fields)
       // but should NOT report boolean_assignment errors for this field
-      const booleanErrors = result.errors.filter(e =>
-        e.type === 'boolean_assignment' && e.field === 'disable_waf'
-      );
+      const booleanErrors = result.errors.filter((e) => e.type === 'boolean_assignment' && e.field === 'disable_waf');
       expect(booleanErrors).toHaveLength(0);
     });
 
@@ -136,9 +134,7 @@ resource "f5xc_http_loadbalancer" "test" {
 }`;
       const result = await mcpClient.validateConfig('http_loadbalancer', validConfig);
 
-      const booleanErrors = result.errors.filter(e =>
-        e.type === 'boolean_assignment' && e.field === 'round_robin'
-      );
+      const booleanErrors = result.errors.filter((e) => e.type === 'boolean_assignment' && e.field === 'round_robin');
       expect(booleanErrors).toHaveLength(0);
     });
 
@@ -159,9 +155,7 @@ resource "f5xc_origin_pool" "test" {
 }`;
       const result = await mcpClient.validateConfig('origin_pool', validConfig);
 
-      const booleanErrors = result.errors.filter(e =>
-        e.type === 'boolean_assignment' && e.field === 'no_tls'
-      );
+      const booleanErrors = result.errors.filter((e) => e.type === 'boolean_assignment' && e.field === 'no_tls');
       expect(booleanErrors).toHaveLength(0);
     });
   });
@@ -253,8 +247,8 @@ resource "f5xc_origin_pool" "test" {
       const oneOfGroups = await mcpClient.getOneOfGroups('origin_pool');
 
       // Should have tls_choice group
-      const hasTlsChoice = Object.keys(oneOfGroups).some(key =>
-        key.includes('tls') || oneOfGroups[key].fields?.includes('no_tls')
+      const hasTlsChoice = Object.keys(oneOfGroups).some(
+        (key) => key.includes('tls') || oneOfGroups[key].fields?.includes('no_tls'),
       );
       expect(hasTlsChoice).toBe(true);
     });
@@ -367,7 +361,7 @@ resource "f5xc_origin_pool" "test" {
       'api_testing',
       'rate_limiter',
       'rate_limiter_policy',
-      'healthcheck'
+      'healthcheck',
     ];
 
     describe.each(tier1SecurityResources)('Tier 1 Security: %s', (resource) => {
@@ -403,7 +397,7 @@ resource "f5xc_origin_pool" "test" {
       'waf_exclusion_policy',
       'service_policy',
       'service_policy_rule',
-      'origin_pool'
+      'origin_pool',
     ];
 
     describe.each(tier2FirewallResources)('Tier 2 Firewall/Policy: %s', (resource) => {
@@ -432,12 +426,7 @@ resource "f5xc_origin_pool" "test" {
   // Tier 3: Supporting Resources (Sprint 3)
   // ===========================================================================
 
-  const tier3SupportingResources = [
-    'trusted_ca_list',
-    'api_crawler',
-    'app_api_group',
-    'udp_loadbalancer'
-  ];
+  const tier3SupportingResources = ['trusted_ca_list', 'api_crawler', 'app_api_group', 'udp_loadbalancer'];
 
   describe.each(tier3SupportingResources)('Tier 3 Supporting: %s', (resource) => {
     it(`should provide syntax guidance for ${resource}`, async () => {

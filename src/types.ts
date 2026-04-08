@@ -147,7 +147,7 @@ export interface SearchResult {
 
 export enum ResponseFormat {
   MARKDOWN = 'markdown',
-  JSON = 'json'
+  JSON = 'json',
 }
 
 // =============================================================================
@@ -174,7 +174,7 @@ export interface OperationsMetadataCollection {
 export interface ResourceOperationInfo {
   resource: string;
   base_path?: string;
-  operations: Record<string, OperationMetadata>;  // key: "create" | "read" | "update" | "delete" | "list"
+  operations: Record<string, OperationMetadata>; // key: "create" | "read" | "update" | "delete" | "list"
   best_practices?: BestPracticesInfo;
   guided_workflows?: GuidedWorkflowInfo[];
 }
@@ -183,8 +183,8 @@ export interface ResourceOperationInfo {
  * Operation-level metadata from x-f5xc-* extensions
  */
 export interface OperationMetadata {
-  method: string;  // HTTP method (POST, GET, PUT, DELETE)
-  path: string;    // API path
+  method: string; // HTTP method (POST, GET, PUT, DELETE)
+  path: string; // API path
   danger_level?: DangerLevel;
   discovered_response_time?: ResponseTimeInfo;
   required_fields?: string[];

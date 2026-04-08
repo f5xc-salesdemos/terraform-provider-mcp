@@ -55,15 +55,15 @@ jobs:
           if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
             VERSION="${{ github.event.client_payload.version }}"
             VERSION="${VERSION#v}"
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
             echo "Using dispatch version: $VERSION"
           elif [[ -n "${{ github.event.inputs.provider_version }}" ]]; then
             VERSION="${{ github.event.inputs.provider_version }}"
             VERSION="${VERSION#v}"
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
             echo "Using manual version: $VERSION"
           else
-            echo "version=" >> $GITHUB_OUTPUT
+            echo "version=" >> "$GITHUB_OUTPUT"
             echo "Using latest release"
           fi
 
@@ -73,6 +73,7 @@ jobs:
           if [[ -n "${{ steps.version.outputs.version }}" ]]; then
             ARGS="--version ${{ steps.version.outputs.version }}"
           fi
+          # shellcheck disable=SC2086
           node scripts/download-data.js $ARGS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -87,10 +88,10 @@ jobs:
         run: |
           git add -A
           if git diff --cached --quiet; then
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No data changes detected"
           else
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "Data changes detected"
             git diff --cached --stat
           fi
@@ -100,9 +101,9 @@ jobs:
         if: steps.changes.outputs.changed == 'true'
         run: |
           if [[ -n "${{ steps.version.outputs.version }}" ]]; then
-            echo "label=${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+            echo "label=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
           else
-            echo "label=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+            echo "label=$(date +%Y%m%d)" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create Pull Request

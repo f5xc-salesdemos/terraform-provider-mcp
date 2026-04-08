@@ -28,7 +28,7 @@
  * @see https://www.npmjs.com/package/@robinmordasiewicz/f5xc-terraform-mcp
  */
 
-import { createRequire } from 'module';
+import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
@@ -59,7 +59,6 @@ import {
   AddonSchema,
   MetadataSchema,
   AuthSchema,
-  ResponseFormatSchema,
   type DiscoverInput,
   type DocsInput,
   type ApiInput,
@@ -129,7 +128,7 @@ server.registerTool(
     // Truncate if too long
     let textContent = result;
     if (textContent.length > CHARACTER_LIMIT) {
-      textContent = textContent.slice(0, CHARACTER_LIMIT) + '\n\n... (truncated)';
+      textContent = `${textContent.slice(0, CHARACTER_LIMIT)}\n\n... (truncated)`;
     }
 
     return {
@@ -220,7 +219,7 @@ server.registerTool(
     // Truncate if too long
     let textContent = result;
     if (textContent.length > CHARACTER_LIMIT) {
-      textContent = textContent.slice(0, CHARACTER_LIMIT) + '\n\n... (truncated)';
+      textContent = `${textContent.slice(0, CHARACTER_LIMIT)}\n\n... (truncated)`;
     }
 
     return {
@@ -355,21 +354,13 @@ server.registerTool(
       lines.push('');
       lines.push('## Available Tools (Token-Optimized)');
       lines.push('');
-      lines.push(
-        '- `f5xc_terraform_discover` - Discover available tools with optional schema details',
-      );
-      lines.push(
-        '- `f5xc_terraform_docs` - Search, get, or list documentation (operations: search, get, list)',
-      );
+      lines.push('- `f5xc_terraform_discover` - Discover available tools with optional schema details');
+      lines.push('- `f5xc_terraform_docs` - Search, get, or list documentation (operations: search, get, list)');
       lines.push(
         '- `f5xc_terraform_api` - Query API specs (operations: search, get, find_endpoints, get_definition, list_definitions)',
       );
-      lines.push(
-        '- `f5xc_terraform_subscription` - Check subscription tiers (operations: resource, property)',
-      );
-      lines.push(
-        '- `f5xc_terraform_addon` - Addon services (operations: list, check, workflow)',
-      );
+      lines.push('- `f5xc_terraform_subscription` - Check subscription tiers (operations: resource, property)');
+      lines.push('- `f5xc_terraform_addon` - Addon services (operations: list, check, workflow)');
       lines.push(
         '- `f5xc_terraform_metadata` - Resource metadata for deterministic AI config generation (operations: oneof, validation, defaults, enums, attribute, requires_replace, tier, dependencies, troubleshoot, syntax, validate, example, mistakes, summary)',
       );
@@ -380,7 +371,9 @@ server.registerTool(
       lines.push('');
       lines.push('> **Token Optimization**: 14 tools consolidated to 8 tools (~70% reduction)');
       lines.push('');
-      lines.push('> **Note**: Use `f5xc_terraform_docs` with `operation: "get", name: "provider"` for complete provider documentation.');
+      lines.push(
+        '> **Note**: Use `f5xc_terraform_docs` with `operation: "get", name: "provider"` for complete provider documentation.',
+      );
 
       textContent = lines.join('\n');
     } else {

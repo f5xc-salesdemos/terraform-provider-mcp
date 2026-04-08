@@ -10,21 +10,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  CredentialManager,
-  AuthMode,
-  getProfileManager,
-} from '@robinmordasiewicz/f5xc-auth';
-import {
-  clearF5XCEnvVars,
-  setupDocumentationModeEnv,
-  setupAuthenticatedModeEnv,
-} from '../utils/ci-environment.js';
-import {
-  handleAuth,
-  initializeAuth,
-  getCredentialManager,
-} from '../../src/tools/auth.js';
+import { CredentialManager, AuthMode } from '@robinmordasiewicz/f5xc-auth';
+import { setupDocumentationModeEnv, setupAuthenticatedModeEnv } from '../utils/ci-environment.js';
+import { handleAuth, initializeAuth, getCredentialManager } from '../../src/tools/auth.js';
 import { ResponseFormat } from '../../src/types.js';
 
 describe('Auth Tool Acceptance Tests', () => {
@@ -161,9 +149,7 @@ describe('Auth Tool Acceptance Tests', () => {
 
       expect(result).toContain('# F5XC Profiles');
       // May contain "No profiles configured" or a table
-      expect(
-        result.includes('No profiles configured') || result.includes('| Profile |')
-      ).toBe(true);
+      expect(result.includes('No profiles configured') || result.includes('| Profile |')).toBe(true);
     });
   });
 
@@ -230,7 +216,7 @@ describe('Auth Tool Acceptance Tests', () => {
         handleAuth({
           operation: 'switch',
           response_format: ResponseFormat.JSON,
-        })
+        }),
       ).rejects.toThrow('profile_name is required');
     });
 
@@ -240,7 +226,7 @@ describe('Auth Tool Acceptance Tests', () => {
           operation: 'switch',
           profile_name: 'nonexistent-profile',
           response_format: ResponseFormat.JSON,
-        })
+        }),
       ).rejects.toThrow("Profile 'nonexistent-profile' not found");
     });
   });
@@ -431,9 +417,10 @@ describe('Auth Tool Acceptance Tests', () => {
     it('should throw for unknown operation', async () => {
       await expect(
         handleAuth({
+          // biome-ignore lint/suspicious/noExplicitAny: testing invalid input
           operation: 'unknown' as any,
           response_format: ResponseFormat.JSON,
-        })
+        }),
       ).rejects.toThrow('Unknown operation');
     });
   });
@@ -509,10 +496,11 @@ describe('Auth Tool Capability Matrix', () => {
     },
     {
       name: 'Custom tenant → Full capabilities',
-      setup: () => setupAuthenticatedModeEnv({
-        apiUrl: 'https://production.console.ves.volterra.io',
-        apiToken: 'prod-token',
-      }),
+      setup: () =>
+        setupAuthenticatedModeEnv({
+          apiUrl: 'https://production.console.ves.volterra.io',
+          apiToken: 'prod-token',
+        }),
       expectedMode: 'token',
       expectedAuth: true,
       expectedSource: 'environment variables',
